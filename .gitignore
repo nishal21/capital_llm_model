@@ -1,0 +1,13 @@
+.cursor/
+.cache/
+wandb/
+results/
+__pycache__/
+*.pyc
+.env
+capital_llm_model/*.safetensors
+capital_llm_model/*.bin
+devlog.md
+learning-journal.md
+PUBLISH.md
+

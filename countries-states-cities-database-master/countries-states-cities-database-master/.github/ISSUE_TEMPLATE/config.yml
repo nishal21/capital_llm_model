@@ -1,0 +1,20 @@
+blank_issues_enabled: false
+contact_links:
+  - name: CSC API Service
+    url: https://countrystatecity.in/
+    about: REST API service for countries, states, and cities
+  - name: CSC Update Tool
+    url: https://manager.countrystatecity.in/
+    about: Web tool to browse, search, and submit data change requests with a streamlined review process.
+  - name: Documentation
+    url: https://docs.countrystatecity.in/
+    about: Comprehensive documentation and usage guides
+  - name: NPM Package
+    url: https://www.npmjs.com/package/@countrystatecity/countries
+    about: NPM package for Node.js applications
+  - name: API Support
+    url: mailto:api@countrystatecity.in
+    about: For API-related questions or issues, contact our API support team.
+  - name: Discussions
+    url: https://github.com/dr5hn/countries-states-cities-database/discussions
+    about: For feature requests, feedback, and general questions.

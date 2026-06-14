@@ -1,0 +1,75 @@
+.DS_Store
+bin/vendor/vendor
+bin/scripts/data/*
+issues/
+csc/
+base.php
+.idea
+/bin/vendor/
+composer.lock
+scripts/vendor/data/*
+scripts/vendor/vendor
+__pycache__/
+*.pyc
+dev/
+
+
+# Generated export files (build artifacts)
+# All large exports are uploaded to GitHub Releases instead of git
+# This keeps the repo small (~200MB instead of 6GB+)
+mongodb/*.json
+mongodb/*.tar.gz
+nmig/logs_directory/
+nmig/dist/
+nmig/node_modules/
+
+# All compressed exports → Releases (not git)
+*.sql.gz
+*.json.gz
+*.toon.gz
+*.geojson.gz
+*.sqlite3.gz
+*.yml.gz
+*.xml.gz
+*.csv.gz
+
+# Large uncompressed exports
+sql/world.sql
+sql/cities.sql
+sql/postcodes.sql
+psql/world.sql
+psql/cities.sql
+psql/postcodes.sql
+sqlserver/world.sql
+sqlserver/cities.sql
+sqlserver/postcodes.sql
+toon/cities.toon
+geojson/cities.geojson
+sqlite/world.sqlite3
+sqlite/cities.sqlite3
+sqlite/postcodes.sqlite3
+json/countries+states+cities.json
+json/cities.json
+json/states+cities.json
+json/postcodes.json
+xml/cities.xml
+xml/postcodes.xml
+yml/cities.yml
+yml/postcodes.yml
+csv/translations.csv
+csv/cities.csv
+csv/postcodes.csv
+
+# Keep small files that are useful in git
+# - Schema files (few KB)
+# - Individual table JSON/CSV/XML/YML (countries, states, regions, subregions)
+!sql/schema.sql
+!psql/schema.sql
+.claude/*
+!.claude/CLAUDE.md
+gc-keys/
+
+# Changelog files (stored in separate repository)
+changelogs/
+site/
+cache/*

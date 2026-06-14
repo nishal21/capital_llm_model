@@ -1,0 +1,43 @@
+{
+  "United States": {
+    "capital": "Washington, D.C.",
+    "states": {
+      "California": "Sacramento",
+      "Texas": "Austin",
+      "Florida": "Tallahassee"
+    }
+  },
+  "Canada": {
+    "capital": "Ottawa",
+    "provinces": {
+      "Ontario": "Toronto",
+      "Quebec": "Quebec City",
+      "British Columbia": "Victoria"
+    }
+  },
+  "Australia": {
+    "capital": "Canberra",
+    "states": {
+      "New South Wales": "Sydney",
+      "Victoria": "Melbourne",
+      "Queensland": "Brisbane"
+    }
+  },
+  "India": {
+    "capital": "New Delhi",
+    "states": {
+      "Maharashtra": "Mumbai",
+      "Karnataka": "Bengaluru",
+      "Tamil Nadu": "Chennai",
+      "Kerala": "Thiruvananthapuram"
+    }
+  },
+  "Germany": {
+    "capital": "Berlin",
+    "states": {
+      "Bavaria": "Munich",
+      "North Rhine-Westphalia": "Düsseldorf",
+      "Baden-Württemberg": "Stuttgart"
+    }
+  }
+}

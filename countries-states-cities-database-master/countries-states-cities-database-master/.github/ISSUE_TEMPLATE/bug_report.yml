@@ -1,0 +1,69 @@
+name: Bug / Data Issue
+description: Report a bug or incorrect data
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Use our [CSC Update Tool](https://manager.countrystatecity.in/) for quick data corrections.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Issue Type
+      description: Which part of the CSC ecosystem is affected?
+      options:
+        - Incorrect Data (wrong information)
+        - Missing Data (missing city/state/country)
+        - Duplicate Entry
+        - Database (JSON/SQL data files)
+        - API (countrystatecity.in)
+        - Export Tool
+        - NPM Package
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location (if applicable)
+      placeholder: "City, State, Country (e.g., San Francisco, CA, USA)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear description of the bug
+      placeholder: "Describe what happened and what you expected to happen"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behaviour
+      description: What should the correct value or behaviour be?
+      placeholder: "Expected/correct value or behaviour"
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source (optional)
+      placeholder: "Link to WikiData, Wikipedia, or official source"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information (screenshots, error messages, environment details)
+    validations:
+      required: false

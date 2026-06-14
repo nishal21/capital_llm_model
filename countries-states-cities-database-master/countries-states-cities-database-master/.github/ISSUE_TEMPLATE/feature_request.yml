@@ -1,0 +1,47 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature!
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      options:
+        - New data field
+        - New export format
+        - API enhancement
+        - Documentation
+        - Tool/Script
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What do you want?
+      placeholder: Describe your feature request
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is this useful?
+      placeholder: Explain the benefit or problem it solves
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I can submit a PR for this
+          required: false

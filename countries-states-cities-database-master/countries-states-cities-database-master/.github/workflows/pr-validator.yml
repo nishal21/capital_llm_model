@@ -1,0 +1,432 @@
+name: PR Validator
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+    paths:
+      - 'contributions/**'
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+concurrency:
+  group: pr-validator-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Contribution
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Remove stale label on new activity
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                name: 'stale',
+              });
+              core.info('Removed stale label due to new activity.');
+            } catch {
+              // Label was not present, that is fine
+            }
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: cd .github/scripts && npm ci --omit=dev
+
+      # Stage 1: PR Format Check (Idea 1 & 5)
+      - name: Validate PR format
+        id: pr_format
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/validate-pr-format.js
+
+      # Stage 2 & 3: Diff Analysis - Auto-label + Critical Detection (Ideas 6, 12, 13)
+      - name: Analyse diff
+        id: diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/analyse-diff.js
+
+      # Stage 4 & 5: JSON Lint + Schema Validation (Ideas 2 & 15)
+      - name: Validate schema
+        id: schema
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/validate-schema.js
+
+      # Stage 6: Cross-Reference Validation (Idea 9)
+      - name: Validate cross-references
+        id: crossref
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/validate-cross-reference.js
+
+      # Stage 7: Coordinate Bounds Check (Idea 8)
+      - name: Check coordinate bounds
+        id: coords
+        continue-on-error: true
+        run: node .github/scripts/validate-coordinates.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Stage 8: Duplicate Detection (Idea 7)
+      - name: Detect duplicates
+        id: duplicates
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/detect-duplicates.js
+
+      # Stage 9: Source URL Check (Idea 16)
+      - name: Check source URLs
+        id: urls
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/check-source-urls.js
+
+      # Post consolidated validation report
+      - name: Post validation report
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          PR_FORMAT_RESULTS: ${{ steps.pr_format.outputs.results }}
+          PR_FORMAT_NEEDS_CLARIFICATION: ${{ steps.pr_format.outputs.needs_clarification }}
+          DIFF_LABELS: ${{ steps.diff.outputs.labels }}
+          DIFF_IS_CRITICAL: ${{ steps.diff.outputs.is_critical }}
+          DIFF_CRITICAL_REASONS: ${{ steps.diff.outputs.critical_reasons }}
+          DIFF_TOTAL_RECORDS: ${{ steps.diff.outputs.total_records }}
+          DIFF_IS_LARGE: ${{ steps.diff.outputs.is_large }}
+          SCHEMA_ERRORS: ${{ steps.schema.outputs.errors }}
+          SCHEMA_WARNINGS: ${{ steps.schema.outputs.warnings }}
+          SCHEMA_ERROR_COUNT: ${{ steps.schema.outputs.error_count }}
+          SCHEMA_WARNING_COUNT: ${{ steps.schema.outputs.warning_count }}
+          SCHEMA_RECORD_COUNT: ${{ steps.schema.outputs.record_count }}
+          SCHEMA_HAS_ERRORS: ${{ steps.schema.outputs.has_errors }}
+          CROSSREF_ERRORS: ${{ steps.crossref.outputs.errors }}
+          CROSSREF_ERROR_COUNT: ${{ steps.crossref.outputs.error_count }}
+          CROSSREF_VALID: ${{ steps.crossref.outputs.valid }}
+          CROSSREF_HAS_ERRORS: ${{ steps.crossref.outputs.has_errors }}
+          COORD_WARNINGS: ${{ steps.coords.outputs.warnings }}
+          COORD_WARNING_COUNT: ${{ steps.coords.outputs.warning_count }}
+          COORD_CHECKED: ${{ steps.coords.outputs.checked }}
+          DUP_WARNINGS: ${{ steps.duplicates.outputs.warnings }}
+          DUP_WARNING_COUNT: ${{ steps.duplicates.outputs.warning_count }}
+          DUP_CHECKED: ${{ steps.duplicates.outputs.checked }}
+          URL_ERRORS: ${{ steps.urls.outputs.errors }}
+          URL_VALID: ${{ steps.urls.outputs.valid }}
+        with:
+          script: |
+            const prFormatResults = JSON.parse(process.env.PR_FORMAT_RESULTS || '{}');
+            const needsClarification = process.env.PR_FORMAT_NEEDS_CLARIFICATION === 'true';
+            const labels = JSON.parse(process.env.DIFF_LABELS || '[]');
+            const isCritical = process.env.DIFF_IS_CRITICAL === 'true';
+            const criticalReasons = JSON.parse(process.env.DIFF_CRITICAL_REASONS || '[]');
+            const totalRecords = parseInt(process.env.DIFF_TOTAL_RECORDS || '0');
+            const isLarge = process.env.DIFF_IS_LARGE === 'true';
+            const schemaErrors = JSON.parse(process.env.SCHEMA_ERRORS || '[]');
+            const schemaWarnings = JSON.parse(process.env.SCHEMA_WARNINGS || '[]');
+            const schemaErrorCount = parseInt(process.env.SCHEMA_ERROR_COUNT || String(schemaErrors.length));
+            const schemaWarningCount = parseInt(process.env.SCHEMA_WARNING_COUNT || String(schemaWarnings.length));
+            const schemaRecordCount = parseInt(process.env.SCHEMA_RECORD_COUNT || '0');
+            const schemaHasErrors = process.env.SCHEMA_HAS_ERRORS === 'true';
+            const crossrefErrors = JSON.parse(process.env.CROSSREF_ERRORS || '[]');
+            const crossrefErrorCount = parseInt(process.env.CROSSREF_ERROR_COUNT || String(crossrefErrors.length));
+            const crossrefValid = parseInt(process.env.CROSSREF_VALID || '0');
+            const crossrefHasErrors = process.env.CROSSREF_HAS_ERRORS === 'true';
+            const coordWarnings = JSON.parse(process.env.COORD_WARNINGS || '[]');
+            const coordWarningCount = parseInt(process.env.COORD_WARNING_COUNT || String(coordWarnings.length));
+            const coordChecked = parseInt(process.env.COORD_CHECKED || '0');
+            const dupWarnings = JSON.parse(process.env.DUP_WARNINGS || '[]');
+            const dupWarningCount = parseInt(process.env.DUP_WARNING_COUNT || String(dupWarnings.length));
+            const dupChecked = parseInt(process.env.DUP_CHECKED || '0');
+            const urlErrors = JSON.parse(process.env.URL_ERRORS || '[]');
+            const urlValid = parseInt(process.env.URL_VALID || '0');
+
+            // Build report
+            let report = '## CSC Validation Report\n\n';
+
+            // PR Format section
+            report += '### PR Format\n';
+            for (const [key, val] of Object.entries(prFormatResults)) {
+              const icon = val.pass ? ':white_check_mark:' : ':x:';
+              report += `- ${icon} ${val.label}\n`;
+            }
+            report += '\n';
+
+            // Labels
+            if (labels.length > 0) {
+              report += `**Labels applied:** ${labels.map(l => '`' + l + '`').join(', ')}\n\n`;
+            }
+
+            // Critical warning
+            if (isCritical) {
+              report += '### :rotating_light: Critical Change Detected\n';
+              report += '> This PR contains changes that require explicit maintainer approval.\n\n';
+              for (const reason of criticalReasons) {
+                report += `- ${reason}\n`;
+              }
+              report += '\n';
+            }
+
+            // Large contribution warning
+            if (isLarge) {
+              report += '### :warning: Large Contribution\n';
+              report += `> This PR contains ${totalRecords} records. Large contributions require manual review.\n\n`;
+            }
+
+            // Schema Validation
+            report += '### Schema Validation';
+            if (schemaRecordCount > 0) {
+              report += ` (${schemaRecordCount} records)\n`;
+            } else {
+              report += '\n';
+            }
+
+            if (schemaErrorCount > 0) {
+              report += '\n**Errors (blocking):**\n';
+              for (const err of schemaErrors.slice(0, 20)) {
+                report += `- :x: ${err}\n`;
+              }
+              if (schemaErrorCount > 20) {
+                report += `- _...and ${schemaErrorCount - 20} more errors_\n`;
+              }
+            }
+            if (schemaWarningCount > 0) {
+              report += '\n**Warnings:**\n';
+              for (const warn of schemaWarnings.slice(0, 10)) {
+                report += `- :warning: ${warn}\n`;
+              }
+              if (schemaWarningCount > 10) {
+                report += `- _...and ${schemaWarningCount - 10} more warnings_\n`;
+              }
+            }
+            if (schemaErrorCount === 0 && schemaWarningCount === 0 && schemaRecordCount > 0) {
+              report += `:white_check_mark: All records passed validation\n`;
+            }
+            report += '\n';
+
+            // Cross-Reference
+            if (crossrefValid > 0 || crossrefErrorCount > 0) {
+              report += '### Cross-Reference Validation\n';
+              if (crossrefValid > 0) {
+                report += `:white_check_mark: ${crossrefValid} reference(s) verified\n`;
+              }
+              for (const err of crossrefErrors.slice(0, 10)) {
+                report += `- :x: ${err}\n`;
+              }
+              if (crossrefErrorCount > 10) {
+                report += `- _...and ${crossrefErrorCount - 10} more errors_\n`;
+              }
+              report += '\n';
+            }
+
+            // Coordinate Bounds
+            if (coordChecked > 0 || coordWarningCount > 0) {
+              report += '### Geo-Bounds Check\n';
+              if (coordWarningCount > 0) {
+                for (const warn of coordWarnings.slice(0, 10)) {
+                  report += `- :warning: ${warn}\n`;
+                }
+                if (coordWarningCount > 10) {
+                  report += `- _...and ${coordWarningCount - 10} more warnings_\n`;
+                }
+              } else {
+                report += `:white_check_mark: All ${coordChecked} coordinate(s) within expected country bounds\n`;
+              }
+              report += '\n';
+            }
+
+            // Duplicate Detection
+            if (dupChecked > 0 || dupWarningCount > 0) {
+              report += '### Duplicate Detection\n';
+              if (dupWarningCount > 0) {
+                for (const warn of dupWarnings.slice(0, 10)) {
+                  report += `- :warning: ${warn}\n`;
+                }
+                if (dupWarningCount > 10) {
+                  report += `- _...and ${dupWarningCount - 10} more potential duplicates_\n`;
+                }
+              } else {
+                report += `:white_check_mark: No duplicates found among ${dupChecked} record(s)\n`;
+              }
+              report += '\n';
+            }
+
+            // Source URLs
+            if (urlValid > 0 || urlErrors.length > 0) {
+              report += '### Source URL Verification\n';
+              if (urlValid > 0) {
+                report += `:white_check_mark: ${urlValid} source URL(s) accessible\n`;
+              }
+              for (const err of urlErrors) {
+                report += `- :warning: ${err}\n`;
+              }
+              report += '\n';
+            }
+
+            // Summary
+            const totalErrors = schemaErrorCount + crossrefErrorCount;
+            const totalWarnings = schemaWarningCount + coordWarningCount + dupWarningCount + urlErrors.length;
+
+            report += '---\n';
+            if (needsClarification) {
+              report += ':speech_balloon: **This PR modifies data but has no linked issue or clear description.** ';
+              report += 'Please provide context about what this change does and why, or link a related issue.\n\n';
+            }
+
+            if (totalErrors === 0 && totalWarnings === 0) {
+              report += ':white_check_mark: **All checks passed** | Status: Ready for review\n';
+            } else if (totalErrors === 0) {
+              report += `:white_check_mark: **0 errors, ${totalWarnings} warning(s)** | Status: Ready for review (with warnings)\n`;
+            } else {
+              report += `:x: **${totalErrors} error(s), ${totalWarnings} warning(s)** | Status: Changes required\n`;
+              report += '\nPlease fix the errors above and push a new commit. ';
+              report += 'Refer to our [Contribution Guidelines](https://github.com/dr5hn/countries-states-cities-database/blob/master/.github/CONTRIBUTING.md) for details.\n';
+            }
+
+            // Post (or update) the report comment. On PRs from forks the
+            // GITHUB_TOKEN is read-only, so comment writes throw "Resource not
+            // accessible by integration". Don't fail the validation over that —
+            // log a warning and rely on the job-summary fallback below.
+            const COMMENT_MARKER = '## CSC Validation Report';
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                per_page: 100,
+              });
+
+              const botComment = comments.find(
+                (c) =>
+                  (c.user.login === 'github-actions[bot]' || c.user.type === 'Bot') &&
+                  c.body.includes(COMMENT_MARKER)
+              );
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: report,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: report,
+                });
+              }
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              core.warning(`Could not post validation comment (likely a fork PR with a read-only token): ${msg}`);
+            }
+
+            // Always surface the report in the job summary so it is visible
+            // even when the comment cannot be posted (e.g. fork PRs).
+            await core.summary.addRaw(report).write();
+
+            // Apply status labels
+            const statusLabels = [];
+            if (totalErrors > 0) {
+              statusLabels.push('needs-changes');
+            } else {
+              statusLabels.push('ready-for-review');
+            }
+
+            try {
+              // Remove conflicting status labels first
+              const labelsToRemove = ['needs-changes', 'ready-for-review'].filter(
+                (l) => !statusLabels.includes(l)
+              );
+              for (const label of labelsToRemove) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: context.payload.pull_request.number,
+                    name: label,
+                  });
+                } catch {
+                  // Label might not exist yet
+                }
+              }
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: statusLabels,
+              });
+            } catch (err) {
+              core.warning(`Could not update status labels: ${err.message}`);
+            }
+
+      # Slack notification for critical PRs
+      - name: Notify Slack (critical)
+        if: steps.diff.outputs.is_critical == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DIFF_CRITICAL_REASONS: ${{ steps.diff.outputs.critical_reasons }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (!process.env.SLACK_WEBHOOK_URL) {
+              core.info('SLACK_WEBHOOK_URL not set. Skipping notification.');
+              return;
+            }
+            const { sendSlackMessage, buildCriticalAlert } = require('./.github/scripts/slack-notify.js');
+            const pr = context.payload.pull_request;
+            const reasons = JSON.parse(process.env.DIFF_CRITICAL_REASONS || '[]');
+
+            await sendSlackMessage(process.env.SLACK_WEBHOOK_URL, buildCriticalAlert({
+              prNumber: pr.number,
+              prTitle: pr.title,
+              prUrl: pr.html_url,
+              author: pr.user.login,
+              reasons,
+            }));
+
+      # Slack notification for large contributions
+      - name: Notify Slack (large contribution)
+        if: steps.diff.outputs.is_large == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DIFF_TOTAL_RECORDS: ${{ steps.diff.outputs.total_records }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (!process.env.SLACK_WEBHOOK_URL) {
+              core.info('SLACK_WEBHOOK_URL not set. Skipping notification.');
+              return;
+            }
+            const { sendSlackMessage, buildLargeContributionWarning } = require('./.github/scripts/slack-notify.js');
+            const pr = context.payload.pull_request;
+
+            await sendSlackMessage(process.env.SLACK_WEBHOOK_URL, buildLargeContributionWarning({
+              prNumber: pr.number,
+              prTitle: pr.title,
+              prUrl: pr.html_url,
+              author: pr.user.login,
+              recordCount: process.env.DIFF_TOTAL_RECORDS,
+            }));

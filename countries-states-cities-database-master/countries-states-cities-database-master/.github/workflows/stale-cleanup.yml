@@ -1,0 +1,165 @@
+name: Stale PR Cleanup
+
+on:
+  schedule:
+    # Every Sunday at midnight UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  stale:
+    name: Mark and close stale PRs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Process stale PRs
+        uses: actions/github-script@v7
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          script: |
+            const WARNING_DAYS = 21;
+            const CLOSE_DAYS = 30;
+            const now = new Date();
+            let closedCount = 0;
+            let warnedCount = 0;
+
+            // Get all open PRs (paginated)
+            let prs = [];
+            let page = 1;
+            while (true) {
+              const { data: batch } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                sort: 'updated',
+                direction: 'asc',
+                per_page: 100,
+                page,
+              });
+              prs = prs.concat(batch);
+              if (batch.length < 100) break;
+              page++;
+            }
+
+            for (const pr of prs) {
+              // Skip PRs labelled as critical
+              const labels = pr.labels.map((l) => l.name);
+              if (labels.includes('critical') || labels.includes('requires-maintainer-approval')) {
+                core.info(`Skipping critical PR #${pr.number}`);
+                continue;
+              }
+
+              const lastUpdated = new Date(pr.updated_at);
+              const daysSinceUpdate = Math.floor((now - lastUpdated) / (1000 * 60 * 60 * 24));
+
+              // Remove stale label if PR has had recent activity
+              if (daysSinceUpdate < WARNING_DAYS && labels.includes('stale')) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    name: 'stale',
+                  });
+                  core.info(`Removed stale label from PR #${pr.number} (activity ${daysSinceUpdate} days ago)`);
+                } catch {
+                  // Label removal failed, not critical
+                }
+                continue;
+              }
+
+              // Close PRs stale for 30+ days (already warned)
+              if (daysSinceUpdate >= CLOSE_DAYS && labels.includes('stale')) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: [
+                    ':hourglass: This PR has been automatically closed due to inactivity (30+ days).',
+                    '',
+                    'If you would like to continue working on this contribution, feel free to reopen the PR or create a new one.',
+                    '',
+                    'Thank you for your interest in improving the CSC database!',
+                  ].join('\n'),
+                });
+
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  state: 'closed',
+                });
+
+                closedCount++;
+                core.info(`Closed stale PR #${pr.number} (${daysSinceUpdate} days inactive)`);
+              }
+
+              // Warn PRs inactive for 21+ days
+              else if (daysSinceUpdate >= WARNING_DAYS && !labels.includes('stale')) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: [
+                    `:warning: This PR has been inactive for ${daysSinceUpdate} days.`,
+                    '',
+                    'It will be automatically closed in **' + (CLOSE_DAYS - daysSinceUpdate) + ' days** if there is no further activity.',
+                    '',
+                    'If you are still working on this, please push a commit or leave a comment to keep it open.',
+                  ].join('\n'),
+                });
+
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: ['stale'],
+                });
+
+                warnedCount++;
+                core.info(`Warned stale PR #${pr.number} (${daysSinceUpdate} days inactive)`);
+              }
+            }
+
+            core.info(`Stale cleanup complete: ${warnedCount} warned, ${closedCount} closed`);
+
+            // Slack notification if any PRs were closed
+            if (closedCount > 0 && process.env.SLACK_WEBHOOK_URL) {
+              const https = require('https');
+              const payload = JSON.stringify({
+                attachments: [{
+                  color: '#808080',
+                  blocks: [{
+                    type: 'section',
+                    text: {
+                      type: 'mrkdwn',
+                      text: `:broom: *Stale PR Cleanup:* ${closedCount} PR(s) auto-closed, ${warnedCount} warned this week.`,
+                    },
+                  }],
+                }],
+              });
+
+              const url = new URL(process.env.SLACK_WEBHOOK_URL);
+              await new Promise((resolve) => {
+                const req = https.request({
+                  hostname: url.hostname,
+                  path: url.pathname,
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+                }, (res) => {
+                  if (res.statusCode !== 200) core.warning(`Slack responded with ${res.statusCode}`);
+                  resolve();
+                });
+                req.on('error', (err) => {
+                  core.warning(`Slack error: ${err.message}`);
+                  resolve();
+                });
+                req.write(payload);
+                req.end();
+              });
+            }

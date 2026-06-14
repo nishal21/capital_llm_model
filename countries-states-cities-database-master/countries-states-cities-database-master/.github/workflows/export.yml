@@ -1,0 +1,624 @@
+name: Export JSON/XML/YAML/CSV/MYSQL/PSQL/SQLITE/SQLSERVER/MONGODB
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "**"
+      - "!bin/Commands/Export**"
+  workflow_dispatch:
+    inputs:
+      pass:
+        description: "Passcode"
+        required: true
+
+jobs:
+  export:
+    name: JSON/XML/YAML/CSV/MYSQL/PSQL/SQLITE/SQLSERVER/MONGODB
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        php-version: [8.2]
+        node-version: [20.x]
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: true
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+          lfs: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: intl #optional
+          coverage: none
+          ini-values: "post_max_size=256M, memory_limit=512M" #optional
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: nmig/package-lock.json
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: bin/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('bin/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Start MySQL service
+        run: |
+          sudo systemctl start mysql.service
+          mysql -V
+          # Wait for MySQL to be ready
+          while ! mysqladmin ping -h"127.0.0.1" --silent; do
+            echo "Waiting for MySQL..."
+            sleep 1
+          done
+
+      - name: Start PostgreSQL service
+        run: |
+          sudo systemctl start postgresql.service
+          pg_isready
+          pg_lsclusters
+          sudo -u postgres psql -c "CREATE DATABASE world;"
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+          sudo -u postgres psql -c "\l"
+
+      - name: Setup MongoDB
+        uses: supercharge/mongodb-github-action@1.10.0
+        with:
+          mongodb-version: '6.0'
+          mongodb-replica-set: rs0
+
+      - name: Install MongoDB Database Tools
+        run: |
+          # Download MongoDB Database Tools directly
+          wget -q https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.7.3.deb
+          sudo dpkg -i mongodb-database-tools-ubuntu2204-x86_64-100.7.3.deb
+          rm -rf mongodb-database-tools-ubuntu2204-x86_64-100.7.3.deb
+
+          # Verify installation
+          mongoimport --version
+
+      - name: Setup MySQL DB
+        run: |
+          echo "🗄️  Creating MySQL database..."
+          mysql -uroot -proot -e "CREATE DATABASE world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+          mysql -uroot -proot -e "SHOW DATABASES;"
+          echo "✅ Database created"
+
+      - name: Initialize Database Schema
+        run: |
+          echo "📋 Creating database tables..."
+          mysql -uroot -proot world < bin/db/schema.sql
+          echo "✅ Schema initialized - verifying tables..."
+          mysql -uroot -proot -e "USE world; SHOW TABLES;"
+          mysql -uroot -proot -e "USE world; SHOW CREATE TABLE regions\G" | head -20
+          echo "✅ All tables created successfully"
+
+      - name: Setup Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mysql-connector-python
+          echo "✅ Python dependencies installed"
+
+      - name: Import JSON to MySQL
+        run: |
+          echo "📥 Importing contributions to MySQL..."
+          python3 bin/scripts/sync/import_json_to_mysql.py --host localhost --user root --password root --database world
+          echo "✅ Import complete - IDs auto-assigned by MySQL"
+
+      - name: Export MySQL to JSON (Validation)
+        run: |
+          echo "🔄 Syncing MySQL back to contributions JSON for validation..."
+          python3 bin/scripts/sync/sync_mysql_to_json.py --host localhost --user root --password root --database world
+          echo "✅ MySQL → JSON sync complete"
+          echo "📊 Validating round-trip consistency..."
+          # Show what changed (if anything)
+          git diff --stat contributions/ || echo "No changes detected - perfect round-trip!"
+
+      - name: Setup & Run NMIG (MySQL to PostgreSQL)
+        run: |
+          cp nmig.config.json nmig/config/config.json
+          cd nmig
+          npm install
+          npm run build
+          npm start
+          cd ..
+
+      - name: Setup MySQLtoSQLite
+        run: |
+          python -m pip install --upgrade pip
+          pip install "mysql-to-sqlite3<2.5.6" "sqlglot<30"
+          mysql2sqlite --version
+
+      - name: Setup variables
+        run: |
+          echo "region_count=$(mysql -uroot -proot -e 'SELECT COUNT(*) FROM world.regions;' -s)" >> $GITHUB_ENV
+          echo "subregion_count=$(mysql -uroot -proot -e 'SELECT COUNT(*) FROM world.subregions;' -s)" >> $GITHUB_ENV
+          echo "country_count=$(mysql -uroot -proot -e 'SELECT COUNT(*) FROM world.countries;' -s)" >> $GITHUB_ENV
+          echo "state_count=$(mysql -uroot -proot -e 'SELECT COUNT(*) FROM world.states;' -s)" >> $GITHUB_ENV
+          echo "city_count=$(mysql -uroot -proot -e 'SELECT COUNT(*) FROM world.cities;' -s)" >> $GITHUB_ENV
+          echo "postcode_count=$(mysql -uroot -proot -sN -e 'SELECT COUNT(*) FROM world.postcodes;' 2>/dev/null || echo 0)" >> $GITHUB_ENV
+          echo "postcode_country_count=$(mysql -uroot -proot -sN -e 'SELECT COUNT(DISTINCT country_code) FROM world.postcodes;' 2>/dev/null || echo 0)" >> $GITHUB_ENV
+          echo "current_date=$(date +'%B %d, %Y')" >> $GITHUB_ENV
+
+      - name: Composer Dependencies
+        working-directory: ./bin
+        run: |
+          composer install
+          php console list
+
+      - name: Export JSON
+        working-directory: ./bin
+        run: php console export:json
+
+      - name: Convert JSON to GeoJSON
+        working-directory: ./bin
+        run: |
+          python3 scripts/export/json_to_geojson.py
+
+      - name: Convert JSON to Toon Format
+        working-directory: ./bin
+        run: |
+          python3 scripts/export/json_to_toon.py
+
+      - name: Export XML
+        working-directory: ./bin
+        run: php console export:xml
+
+      - name: Export YAML
+        working-directory: ./bin
+        run: php console export:yaml
+
+      - name: Export CSV
+        working-directory: ./bin
+        run: php console export:csv
+
+      - name: Export MySQL SQL
+        run: |
+          mkdir -p sql
+          mysqldump -uroot -proot --single-transaction --add-drop-table --disable-keys --set-charset --skip-add-locks world regions > sql/regions.sql
+          mysqldump -uroot -proot --single-transaction --add-drop-table --disable-keys --set-charset --skip-add-locks world subregions > sql/subregions.sql
+          mysqldump -uroot -proot --single-transaction --add-drop-table --disable-keys --set-charset --skip-add-locks world countries > sql/countries.sql
+          mysqldump -uroot -proot --single-transaction --add-drop-table --disable-keys --set-charset --skip-add-locks world states > sql/states.sql
+          mysqldump -uroot -proot --single-transaction --add-drop-table --disable-keys --set-charset --skip-add-locks world cities > sql/cities.sql
+          mysqldump -uroot -proot --single-transaction --add-drop-table --disable-keys --set-charset --skip-add-locks world postcodes > sql/postcodes.sql
+          # Export complete world database
+          mysqldump -uroot -proot --single-transaction --add-drop-table --disable-keys --set-charset --skip-add-locks world > sql/world.sql
+
+      - name: Add DROP TABLE commands to world.sql
+        run: |
+          echo "🧹 Adding DROP TABLE commands in correct order..."
+          # Remove any existing DROP TABLE commands
+          grep -v "DROP TABLE" sql/world.sql > sql/world_temp.sql
+          # Create new file with DROP TABLE commands in correct order (reverse of foreign key dependencies).
+          # postcodes drops first because it FKs to countries/states/cities.
+          cat > sql/world.sql << 'EOF'
+          -- -------------------------------------------------------------
+          -- Generated from MySQL database
+          -- Combined world database
+          -- -------------------------------------------------------------
+
+          DROP TABLE IF EXISTS `postcodes`;
+          DROP TABLE IF EXISTS `cities`;
+          DROP TABLE IF EXISTS `states`;
+          DROP TABLE IF EXISTS `countries`;
+          DROP TABLE IF EXISTS `subregions`;
+          DROP TABLE IF EXISTS `regions`;
+
+          EOF
+          # Append the dump without DROP TABLE commands
+          cat sql/world_temp.sql >> sql/world.sql
+          rm sql/world_temp.sql
+          echo "✅ DROP TABLE commands added"
+
+      - name: Generate Schema Files
+        run: |
+          echo "📋 Generating schema files..."
+          # Export MySQL schema only (no data)
+          mysqldump -uroot -proot --no-data --single-transaction --add-drop-table world > sql/schema.sql
+          echo "✅ Schema files generated"
+
+      - name: Export PostgreSQL SQL
+        env:
+          PGPASSWORD: postgres
+        run: |
+          mkdir -p psql
+          # Export PostgreSQL schema only (no data)
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --schema-only --clean --if-exists --no-owner --no-acl > psql/schema.sql
+          # Export individual tables with data
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --inserts --clean --if-exists --no-owner --no-acl -t regions > psql/regions.sql
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --inserts --clean --if-exists --no-owner --no-acl -t subregions > psql/subregions.sql
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --inserts --clean --if-exists --no-owner --no-acl -t countries > psql/countries.sql
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --inserts --clean --if-exists --no-owner --no-acl -t states > psql/states.sql
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --inserts --clean --if-exists --no-owner --no-acl -t cities > psql/cities.sql
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --inserts --clean --if-exists --no-owner --no-acl -t postcodes > psql/postcodes.sql
+          pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --inserts --clean --if-exists --no-owner --no-acl > psql/world.sql
+
+          # Remove \restrict and \unrestrict commands from all psql files
+          for f in psql/*.sql; do
+            grep -v '^\\\(un\)\?restrict ' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+          done
+
+      - name: Export SQLite
+        run: |
+          # Clean up any existing SQLite files first
+          rm -rf sqlite/
+          mkdir -p sqlite
+
+          mysql2sqlite -d world -t regions --mysql-password root -u root -f sqlite/regions.sqlite3
+          mysql2sqlite -d world -t subregions --mysql-password root -u root -f sqlite/subregions.sqlite3
+          mysql2sqlite -d world -t countries --mysql-password root -u root -f sqlite/countries.sqlite3
+          mysql2sqlite -d world -t states --mysql-password root -u root -f sqlite/states.sqlite3
+          mysql2sqlite -d world -t cities --mysql-password root -u root -f sqlite/cities.sqlite3
+          mysql2sqlite -d world -t postcodes --mysql-password root -u root -f sqlite/postcodes.sqlite3
+          mysql2sqlite -d world --mysql-password root -u root -f sqlite/world.sqlite3
+
+      - name: Export SQL Server
+        working-directory: ./bin
+        run: php console export:sql-server
+
+      - name: Export MongoDB
+        working-directory: ./bin
+        run: |
+          php console export:mongodb
+          ls -la ../mongodb
+
+      - name: Import MongoDB
+        working-directory: ./mongodb
+        run: |
+          # Wait for MongoDB to be ready
+          sleep 5
+
+          echo "Importing collections..."
+          mongoimport --host localhost:27017 --db world --collection regions --file regions.json --jsonArray
+          mongoimport --host localhost:27017 --db world --collection subregions --file subregions.json --jsonArray
+          mongoimport --host localhost:27017 --db world --collection countries --file countries.json --jsonArray
+          mongoimport --host localhost:27017 --db world --collection states --file states.json --jsonArray
+          mongoimport --host localhost:27017 --db world --collection cities --file cities.json --jsonArray
+          if [ -s postcodes.json ] && [ "$(jq 'length' postcodes.json)" -gt 0 ]; then
+            mongoimport --host localhost:27017 --db world --collection postcodes --file postcodes.json --jsonArray
+          else
+            echo "Skipping postcodes import — empty or missing"
+          fi
+          echo "Import completed"
+
+          # Create a MongoDB dump
+          mongodump --host localhost:27017 --db world --out mongodb-dump
+
+          # Compress the dump
+          tar -czvf world-mongodb-dump.tar.gz mongodb-dump
+          echo "MongoDB dump created at mongodb/world-mongodb-dump.tar.gz"
+
+          rm -rf mongodb-dump regions.json subregions.json countries.json states.json cities.json postcodes.json
+
+      - name: Compress All Large Files
+        run: |
+          echo "🗜️  Compressing all large files..."
+          echo "================================"
+
+          # JSON Files
+          echo "📄 Compressing JSON files..."
+          if [ -f json/countries+states+cities.json ]; then
+            gzip -9 -k -f json/countries+states+cities.json
+            echo "  ✓ json/countries+states+cities.json.gz"
+          fi
+          if [ -f json/cities.json ]; then
+            gzip -9 -k -f json/cities.json
+            echo "  ✓ json/cities.json.gz"
+          fi
+          if [ -f json/postcodes.json ]; then
+            gzip -9 -k -f json/postcodes.json
+            echo "  ✓ json/postcodes.json.gz"
+          fi
+
+          # TOON Files
+          echo "📄 Compressing TOON files..."
+          if [ -f toon/cities.toon ]; then
+            gzip -9 -k -f toon/cities.toon
+            echo "  ✓ toon/cities.toon.gz"
+          fi
+
+          # GEOJSON Files
+          echo "📄 Compressing GEOJSON files..."
+          if [ -f geojson/cities.geojson ]; then
+            gzip -9 -k -f geojson/cities.geojson
+            echo "  ✓ geojson/cities.geojson.gz"
+          fi
+
+          # XML Files
+          echo "📄 Compressing XML files..."
+          if [ -f xml/cities.xml ]; then
+            gzip -9 -k -f xml/cities.xml
+            echo "  ✓ xml/cities.xml.gz"
+          fi
+          if [ -f xml/postcodes.xml ]; then
+            gzip -9 -k -f xml/postcodes.xml
+            echo "  ✓ xml/postcodes.xml.gz"
+          fi
+
+          # YAML Files
+          echo "📄 Compressing YAML files..."
+          if [ -f yml/cities.yml ]; then
+            gzip -9 -k -f yml/cities.yml
+            echo "  ✓ yml/cities.yml.gz"
+          fi
+          if [ -f yml/postcodes.yml ]; then
+            gzip -9 -k -f yml/postcodes.yml
+            echo "  ✓ yml/postcodes.yml.gz"
+          fi
+
+          # CSV Files
+          echo "📄 Compressing CSV files..."
+          if [ -f csv/cities.csv ]; then
+            gzip -9 -k -f csv/cities.csv
+            echo "  ✓ csv/cities.csv.gz"
+          fi
+          if [ -f csv/translations.csv ]; then
+            gzip -9 -k -f csv/translations.csv
+            echo "  ✓ csv/translations.csv.gz"
+          fi
+          if [ -f csv/postcodes.csv ]; then
+            gzip -9 -k -f csv/postcodes.csv
+            echo "  ✓ csv/postcodes.csv.gz"
+          fi
+
+          # MySQL SQL Files
+          echo "📄 Compressing MySQL SQL files..."
+          gzip -9 -k -f sql/world.sql
+          gzip -9 -k -f sql/cities.sql
+          echo "  ✓ sql/world.sql.gz"
+          echo "  ✓ sql/cities.sql.gz"
+          if [ -f sql/postcodes.sql ]; then
+            gzip -9 -k -f sql/postcodes.sql
+            echo "  ✓ sql/postcodes.sql.gz"
+          fi
+
+          # PostgreSQL SQL Files
+          echo "📄 Compressing PostgreSQL SQL files..."
+          gzip -9 -k -f psql/world.sql
+          gzip -9 -k -f psql/cities.sql
+          echo "  ✓ psql/world.sql.gz"
+          echo "  ✓ psql/cities.sql.gz"
+          if [ -f psql/postcodes.sql ]; then
+            gzip -9 -k -f psql/postcodes.sql
+            echo "  ✓ psql/postcodes.sql.gz"
+          fi
+
+          # SQLite Files
+          echo "📄 Compressing SQLite files..."
+          gzip -9 -k -f sqlite/world.sqlite3
+          gzip -9 -k -f sqlite/cities.sqlite3
+          echo "  ✓ sqlite/world.sqlite3.gz"
+          echo "  ✓ sqlite/cities.sqlite3.gz"
+          if [ -f sqlite/postcodes.sqlite3 ]; then
+            gzip -9 -k -f sqlite/postcodes.sqlite3
+            echo "  ✓ sqlite/postcodes.sqlite3.gz"
+          fi
+
+          # SQL Server Files
+          echo "📄 Compressing SQL Server files..."
+          if [ -f sqlserver/world.sql ]; then
+            gzip -9 -k -f sqlserver/world.sql
+            echo "  ✓ sqlserver/world.sql.gz"
+          fi
+          if [ -f sqlserver/cities.sql ]; then
+            gzip -9 -k -f sqlserver/cities.sql
+            echo "  ✓ sqlserver/cities.sql.gz"
+          fi
+          if [ -f sqlserver/postcodes.sql ]; then
+            gzip -9 -k -f sqlserver/postcodes.sql
+            echo "  ✓ sqlserver/postcodes.sql.gz"
+          fi
+
+          echo "================================"
+          echo "✅ All compression complete!"
+          echo ""
+          echo "📊 Compressed file sizes:"
+          ls -lh json/*.gz toon/*.gz geojson/*.gz xml/*.gz yml/*.gz csv/*.gz sql/*.gz psql/*.gz sqlite/*.gz sqlserver/*.gz 2>/dev/null || true
+
+      - name: Update README.md
+        run: |
+          sed -i "s/Total Regions : [0-9]* <br>/Total Regions : $region_count <br>/" README.md
+          sed -i "s/Total Sub Regions : [0-9]* <br>/Total Sub Regions : $subregion_count <br>/" README.md
+          sed -i "s/Total Countries : [0-9]* <br>/Total Countries : $country_count <br>/" README.md
+          sed -i "s/Total States\/Regions\/Municipalities : [0-9]* <br>/Total States\/Regions\/Municipalities : $state_count <br>/" README.md
+          sed -i "s/Total Cities\/Towns\/Districts : [0-9]* <br>/Total Cities\/Towns\/Districts : $city_count <br>/" README.md
+          sed -i "s/Total Postcodes : [0-9,]* ([0-9]* countries) <br>/Total Postcodes : $postcode_count ($postcode_country_count countries) <br>/" README.md
+          sed -i "s/Last Updated On: .*$/Last Updated On: $current_date/" README.md
+
+      - name: Create GitHub Release with exports
+        uses: actions/github-script@v7
+        env:
+          CURRENT_DATE: ${{ env.current_date }}
+          REGION_COUNT: ${{ env.region_count }}
+          SUBREGION_COUNT: ${{ env.subregion_count }}
+          COUNTRY_COUNT: ${{ env.country_count }}
+          STATE_COUNT: ${{ env.state_count }}
+          CITY_COUNT: ${{ env.city_count }}
+          POSTCODE_COUNT: ${{ env.postcode_count }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Find latest feature release for base version, and count existing
+            // export releases for that base version to determine next export number.
+            //
+            // Feature releases match strictly `^v?\d+\.\d+$` (e.g. v3.2, v3.1).
+            // Export releases match `^v?\d+\.\d+-export\.\d+$` (e.g. v3.2-export.1)
+            // and are explicitly excluded from the base-version search even though
+            // they are not flagged as prereleases (they need to be non-prerelease
+            // so downstream tools that pull /releases/latest pick up the data).
+            //
+            // If no feature release is found, the workflow FAILS rather than
+            // falling back to v0.0 — silently shipping v0.0-export.N once is
+            // already one tag too many.
+            const featureRe = /^v?(\d+)\.(\d+)$/;
+            const exportTagPrefix = (m, n) => new RegExp(`^v?${m}\\.${n}-export\\.(\\d+)$`);
+
+            let bestMajor = 0, bestMinor = 0;
+            let exportNum = 0;
+            let releases;
+            try {
+              const resp = await github.rest.repos.listReleases({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              });
+              releases = resp.data;
+            } catch (err) {
+              core.setFailed(`Could not list releases to determine base version: ${err.message}`);
+              return;
+            }
+
+            for (const rel of releases) {
+              if (rel.prerelease || rel.draft) continue;
+              const match = rel.tag_name.match(featureRe);
+              if (!match) continue;
+              const m = parseInt(match[1]);
+              const n = parseInt(match[2]);
+              if (m > bestMajor || (m === bestMajor && n > bestMinor)) {
+                bestMajor = m;
+                bestMinor = n;
+              }
+            }
+
+            if (bestMajor === 0 && bestMinor === 0) {
+              core.setFailed('No feature release matching v\\d+\\.\\d+ found. Cut a v<MAJOR>.<MINOR> release first (gh release create vX.Y --target master), then re-run this workflow.');
+              return;
+            }
+
+            const baseVersion = `${bestMajor}.${bestMinor}`;
+            const exportRe = exportTagPrefix(bestMajor, bestMinor);
+            for (const rel of releases) {
+              const match = rel.tag_name.match(exportRe);
+              if (match) {
+                const num = parseInt(match[1]);
+                if (num > exportNum) exportNum = num;
+              }
+            }
+
+            exportNum++;
+            const tag = `v${baseVersion}-export.${exportNum}`;
+
+            core.info(`Base version: v${baseVersion}, creating export release ${tag}...`);
+
+            // Create export release as prerelease (doesn't override latest feature release)
+            const { data: release } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: tag,
+              body: [
+                `## ${tag} - ${process.env.CURRENT_DATE}`,
+                '',
+                `Data export build for v${baseVersion}.`,
+                '',
+                '### Data Statistics',
+                `- **Regions**: ${process.env.REGION_COUNT}`,
+                `- **Subregions**: ${process.env.SUBREGION_COUNT}`,
+                `- **Countries**: ${process.env.COUNTRY_COUNT}`,
+                `- **States**: ${process.env.STATE_COUNT}`,
+                `- **Cities**: ${process.env.CITY_COUNT}`,
+                `- **Postcodes**: ${process.env.POSTCODE_COUNT}`,
+                '',
+                '### Formats',
+                'JSON, MySQL, PostgreSQL, SQLite, SQL Server, XML, YAML, CSV, GeoJSON, Toon, MongoDB',
+                '',
+                '---',
+                '*Auto-generated by GitHub Actions export workflow*',
+              ].join('\n'),
+              draft: false,
+              prerelease: false,
+            });
+
+            core.info(`Release created: ${release.html_url}`);
+
+            // Upload all .gz files and mongodb dump
+            const uploadPatterns = [
+              'json/*.gz',
+              'sql/*.gz',
+              'psql/*.gz',
+              'sqlite/*.gz',
+              'sqlserver/*.gz',
+              'xml/*.gz',
+              'yml/*.gz',
+              'csv/*.gz',
+              'toon/*.gz',
+              'geojson/*.gz',
+              'mongodb/world-mongodb-dump.tar.gz',
+            ];
+
+            for (const pattern of uploadPatterns) {
+              const globber = await glob.create(pattern);
+              for await (const filePath of globber.globGenerator()) {
+                // Prefix with directory to avoid name collisions
+                // e.g. sql/cities.sql.gz → sql-cities.sql.gz, psql/cities.sql.gz → psql-cities.sql.gz
+                const dir = path.basename(path.dirname(filePath));
+                const base = path.basename(filePath);
+                const assetName = `${dir}-${base}`;
+                const fileSize = fs.statSync(filePath).size;
+                core.info(`Uploading ${assetName} (${(fileSize / 1024 / 1024).toFixed(1)} MB)...`);
+
+                const data = fs.readFileSync(filePath);
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: release.id,
+                  name: assetName,
+                  data,
+                });
+              }
+            }
+
+            core.info('All export assets uploaded to release.');
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: |
+            Export database formats - ${{ env.current_date }}
+
+            Total records: ${{ env.country_count }} countries, ${{ env.state_count }} states, ${{ env.city_count }} cities, ${{ env.postcode_count }} postcodes
+            Large files (.gz) uploaded to GitHub Releases instead of git.
+          committer: Darshan Gada <gadadarshan@gmail.com>
+          signoff: true
+          branch: export/Files
+          delete-branch: true
+          title: "Database Export - ${{ env.current_date }}"
+          body: |
+            ## Database Export
+
+            ### Data Statistics
+            - **Regions**: ${{ env.region_count }}
+            - **Subregions**: ${{ env.subregion_count }}
+            - **Countries**: ${{ env.country_count }}
+            - **States**: ${{ env.state_count }}
+            - **Cities**: ${{ env.city_count }}
+            - **Postcodes**: ${{ env.postcode_count }}
+
+            ### What's in this PR
+            Small export files (individual table JSON, CSV, SQL schema, etc.) that are useful in the repo.
+
+            ### What's in the Release
+            All large compressed exports (.gz) are attached to the [latest release](https://github.com/${{ github.repository }}/releases) instead of committed to git.
+
+            ---
+            *Generated by GitHub Actions*
+          labels: |
+            exports
+            automated
+          reviewers: dr5hn

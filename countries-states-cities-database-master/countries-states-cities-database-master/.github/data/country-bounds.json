@@ -1,0 +1,1118 @@
+{
+  "AF": {
+    "minLat": 29.38,
+    "maxLat": 38.49,
+    "minLon": 60.5,
+    "maxLon": 74.89
+  },
+  "AL": {
+    "minLat": 39.64,
+    "maxLat": 42.66,
+    "minLon": 19.26,
+    "maxLon": 21.06
+  },
+  "DZ": {
+    "minLat": 18.96,
+    "maxLat": 37.09,
+    "minLon": -8.67,
+    "maxLon": 11.98
+  },
+  "AS": {
+    "minLat": -14.38,
+    "maxLat": -14.16,
+    "minLon": -170.83,
+    "maxLon": -169.42
+  },
+  "AD": {
+    "minLat": 42.43,
+    "maxLat": 42.65,
+    "minLon": 1.41,
+    "maxLon": 1.79
+  },
+  "AO": {
+    "minLat": -18.04,
+    "maxLat": -4.38,
+    "minLon": 11.64,
+    "maxLon": 24.08
+  },
+  "AG": {
+    "minLat": 16.99,
+    "maxLat": 17.73,
+    "minLon": -61.91,
+    "maxLon": -61.67
+  },
+  "AR": {
+    "minLat": -55.06,
+    "maxLat": -21.78,
+    "minLon": -73.58,
+    "maxLon": -53.59
+  },
+  "AM": {
+    "minLat": 38.84,
+    "maxLat": 41.3,
+    "minLon": 43.45,
+    "maxLon": 46.63
+  },
+  "AU": {
+    "minLat": -43.64,
+    "maxLat": -10.06,
+    "minLon": 113.15,
+    "maxLon": 153.64
+  },
+  "AT": {
+    "minLat": 46.37,
+    "maxLat": 49.02,
+    "minLon": 9.53,
+    "maxLon": 17.16
+  },
+  "AZ": {
+    "minLat": 38.39,
+    "maxLat": 41.91,
+    "minLon": 44.77,
+    "maxLon": 50.37
+  },
+  "BS": {
+    "minLat": 20.91,
+    "maxLat": 26.93,
+    "minLon": -79.66,
+    "maxLon": -72.71
+  },
+  "BH": {
+    "minLat": 25.8,
+    "maxLat": 26.29,
+    "minLon": 50.38,
+    "maxLon": 50.65
+  },
+  "BD": {
+    "minLat": 20.74,
+    "maxLat": 26.63,
+    "minLon": 88.01,
+    "maxLon": 92.67
+  },
+  "BB": {
+    "minLat": 13.04,
+    "maxLat": 13.34,
+    "minLon": -59.65,
+    "maxLon": -59.43
+  },
+  "BY": {
+    "minLat": 51.26,
+    "maxLat": 56.17,
+    "minLon": 23.18,
+    "maxLon": 32.78
+  },
+  "BE": {
+    "minLat": 49.5,
+    "maxLat": 51.51,
+    "minLon": 2.55,
+    "maxLon": 6.4
+  },
+  "BZ": {
+    "minLat": 15.89,
+    "maxLat": 18.49,
+    "minLon": -89.22,
+    "maxLon": -87.49
+  },
+  "BJ": {
+    "minLat": 6.24,
+    "maxLat": 12.42,
+    "minLon": 0.77,
+    "maxLon": 3.84
+  },
+  "BT": {
+    "minLat": 26.71,
+    "maxLat": 28.33,
+    "minLon": 88.75,
+    "maxLon": 92.12
+  },
+  "BO": {
+    "minLat": -22.9,
+    "maxLat": -9.68,
+    "minLon": -69.64,
+    "maxLon": -57.45
+  },
+  "BA": {
+    "minLat": 42.56,
+    "maxLat": 45.28,
+    "minLon": 15.73,
+    "maxLon": 19.62
+  },
+  "BW": {
+    "minLat": -26.91,
+    "maxLat": -17.78,
+    "minLon": 19.99,
+    "maxLon": 29.37
+  },
+  "BR": {
+    "minLat": -33.75,
+    "maxLat": 5.27,
+    "minLon": -73.99,
+    "maxLon": -34.79
+  },
+  "BN": {
+    "minLat": 4.0,
+    "maxLat": 5.05,
+    "minLon": 114.08,
+    "maxLon": 115.36
+  },
+  "BG": {
+    "minLat": 41.24,
+    "maxLat": 44.21,
+    "minLon": 22.36,
+    "maxLon": 28.61
+  },
+  "BF": {
+    "minLat": 9.4,
+    "maxLat": 15.08,
+    "minLon": -5.52,
+    "maxLon": 2.4
+  },
+  "BI": {
+    "minLat": -4.47,
+    "maxLat": -2.31,
+    "minLon": 29.0,
+    "maxLon": 30.85
+  },
+  "KH": {
+    "minLat": 10.41,
+    "maxLat": 14.69,
+    "minLon": 102.34,
+    "maxLon": 107.63
+  },
+  "CM": {
+    "minLat": 1.65,
+    "maxLat": 13.08,
+    "minLon": 8.49,
+    "maxLon": 16.19
+  },
+  "CA": {
+    "minLat": 41.68,
+    "maxLat": 83.11,
+    "minLon": -141.0,
+    "maxLon": -52.62
+  },
+  "CV": {
+    "minLat": 14.8,
+    "maxLat": 17.2,
+    "minLon": -25.36,
+    "maxLon": -22.67
+  },
+  "CF": {
+    "minLat": 2.22,
+    "maxLat": 11.01,
+    "minLon": 14.42,
+    "maxLon": 27.46
+  },
+  "TD": {
+    "minLat": 7.44,
+    "maxLat": 23.45,
+    "minLon": 13.47,
+    "maxLon": 24.0
+  },
+  "CL": {
+    "minLat": -55.98,
+    "maxLat": -17.51,
+    "minLon": -75.64,
+    "maxLon": -66.96
+  },
+  "CN": {
+    "minLat": 18.15,
+    "maxLat": 53.56,
+    "minLon": 73.5,
+    "maxLon": 134.77
+  },
+  "CO": {
+    "minLat": -4.23,
+    "maxLat": 12.46,
+    "minLon": -79.0,
+    "maxLon": -66.87
+  },
+  "KM": {
+    "minLat": -12.42,
+    "maxLat": -11.36,
+    "minLon": 43.23,
+    "maxLon": 44.54
+  },
+  "CG": {
+    "minLat": -5.03,
+    "maxLat": 3.7,
+    "minLon": 11.21,
+    "maxLon": 18.65
+  },
+  "CD": {
+    "minLat": -13.46,
+    "maxLat": 5.39,
+    "minLon": 12.2,
+    "maxLon": 31.31
+  },
+  "CR": {
+    "minLat": 8.03,
+    "maxLat": 11.22,
+    "minLon": -85.95,
+    "maxLon": -82.55
+  },
+  "CI": {
+    "minLat": 4.36,
+    "maxLat": 10.74,
+    "minLon": -8.6,
+    "maxLon": -2.49
+  },
+  "HR": {
+    "minLat": 42.39,
+    "maxLat": 46.55,
+    "minLon": 13.49,
+    "maxLon": 19.43
+  },
+  "CU": {
+    "minLat": 19.83,
+    "maxLat": 23.27,
+    "minLon": -84.96,
+    "maxLon": -74.13
+  },
+  "CY": {
+    "minLat": 34.57,
+    "maxLat": 35.7,
+    "minLon": 32.27,
+    "maxLon": 34.6
+  },
+  "CZ": {
+    "minLat": 48.55,
+    "maxLat": 51.06,
+    "minLon": 12.09,
+    "maxLon": 18.86
+  },
+  "DK": {
+    "minLat": 54.56,
+    "maxLat": 57.75,
+    "minLon": 8.08,
+    "maxLon": 15.2
+  },
+  "DJ": {
+    "minLat": 10.93,
+    "maxLat": 12.71,
+    "minLon": 41.77,
+    "maxLon": 43.42
+  },
+  "DM": {
+    "minLat": 15.21,
+    "maxLat": 15.64,
+    "minLon": -61.48,
+    "maxLon": -61.24
+  },
+  "DO": {
+    "minLat": 17.47,
+    "maxLat": 19.93,
+    "minLon": -72.01,
+    "maxLon": -68.32
+  },
+  "EC": {
+    "minLat": -5.01,
+    "maxLat": 1.68,
+    "minLon": -81.08,
+    "maxLon": -75.19
+  },
+  "EG": {
+    "minLat": 22.0,
+    "maxLat": 31.67,
+    "minLon": 24.7,
+    "maxLon": 36.9
+  },
+  "SV": {
+    "minLat": 13.15,
+    "maxLat": 14.45,
+    "minLon": -90.13,
+    "maxLon": -87.69
+  },
+  "GQ": {
+    "minLat": -1.47,
+    "maxLat": 3.79,
+    "minLon": 5.62,
+    "maxLon": 11.34
+  },
+  "ER": {
+    "minLat": 12.36,
+    "maxLat": 18.0,
+    "minLon": 36.44,
+    "maxLon": 43.13
+  },
+  "EE": {
+    "minLat": 57.52,
+    "maxLat": 59.68,
+    "minLon": 21.83,
+    "maxLon": 28.21
+  },
+  "SZ": {
+    "minLat": -27.32,
+    "maxLat": -25.72,
+    "minLon": 30.79,
+    "maxLon": 32.14
+  },
+  "ET": {
+    "minLat": 3.4,
+    "maxLat": 14.89,
+    "minLon": 32.99,
+    "maxLon": 48.0
+  },
+  "FJ": {
+    "minLat": -20.67,
+    "maxLat": -12.48,
+    "minLon": 177.0,
+    "maxLon": -179.79
+  },
+  "FI": {
+    "minLat": 59.81,
+    "maxLat": 70.09,
+    "minLon": 20.55,
+    "maxLon": 31.59
+  },
+  "FR": {
+    "minLat": 41.36,
+    "maxLat": 51.09,
+    "minLon": -5.14,
+    "maxLon": 9.56
+  },
+  "GA": {
+    "minLat": -3.98,
+    "maxLat": 2.32,
+    "minLon": 8.7,
+    "maxLon": 14.5
+  },
+  "GM": {
+    "minLat": 13.06,
+    "maxLat": 13.83,
+    "minLon": -16.82,
+    "maxLon": -13.8
+  },
+  "GE": {
+    "minLat": 41.05,
+    "maxLat": 43.59,
+    "minLon": 40.01,
+    "maxLon": 46.74
+  },
+  "DE": {
+    "minLat": 47.27,
+    "maxLat": 55.06,
+    "minLon": 5.87,
+    "maxLon": 15.04
+  },
+  "GH": {
+    "minLat": 4.74,
+    "maxLat": 11.17,
+    "minLon": -3.26,
+    "maxLon": 1.19
+  },
+  "GR": {
+    "minLat": 34.8,
+    "maxLat": 41.75,
+    "minLon": 19.37,
+    "maxLon": 29.65
+  },
+  "GD": {
+    "minLat": 11.99,
+    "maxLat": 12.24,
+    "minLon": -61.8,
+    "maxLon": -61.58
+  },
+  "GT": {
+    "minLat": 13.74,
+    "maxLat": 17.82,
+    "minLon": -92.23,
+    "maxLon": -88.22
+  },
+  "GN": {
+    "minLat": 7.19,
+    "maxLat": 12.68,
+    "minLon": -15.08,
+    "maxLon": -7.64
+  },
+  "GW": {
+    "minLat": 10.87,
+    "maxLat": 12.68,
+    "minLon": -16.71,
+    "maxLon": -13.64
+  },
+  "GY": {
+    "minLat": 1.17,
+    "maxLat": 8.56,
+    "minLon": -61.39,
+    "maxLon": -56.49
+  },
+  "HT": {
+    "minLat": 18.02,
+    "maxLat": 20.09,
+    "minLon": -74.48,
+    "maxLon": -71.62
+  },
+  "HN": {
+    "minLat": 12.98,
+    "maxLat": 16.51,
+    "minLon": -89.35,
+    "maxLon": -83.15
+  },
+  "HU": {
+    "minLat": 45.74,
+    "maxLat": 48.59,
+    "minLon": 16.11,
+    "maxLon": 22.9
+  },
+  "IS": {
+    "minLat": 63.39,
+    "maxLat": 66.54,
+    "minLon": -24.53,
+    "maxLon": -13.5
+  },
+  "IN": {
+    "minLat": 6.75,
+    "maxLat": 35.51,
+    "minLon": 68.16,
+    "maxLon": 97.4
+  },
+  "ID": {
+    "minLat": -10.94,
+    "maxLat": 5.91,
+    "minLon": 95.01,
+    "maxLon": 141.02
+  },
+  "IR": {
+    "minLat": 25.06,
+    "maxLat": 39.78,
+    "minLon": 44.05,
+    "maxLon": 63.32
+  },
+  "IQ": {
+    "minLat": 29.06,
+    "maxLat": 37.38,
+    "minLon": 38.79,
+    "maxLon": 48.56
+  },
+  "IE": {
+    "minLat": 51.42,
+    "maxLat": 55.39,
+    "minLon": -10.48,
+    "maxLon": -6.0
+  },
+  "IL": {
+    "minLat": 29.5,
+    "maxLat": 33.34,
+    "minLon": 34.27,
+    "maxLon": 35.9
+  },
+  "IT": {
+    "minLat": 35.49,
+    "maxLat": 47.09,
+    "minLon": 6.63,
+    "maxLon": 18.52
+  },
+  "JM": {
+    "minLat": 17.7,
+    "maxLat": 18.52,
+    "minLon": -78.37,
+    "maxLon": -76.18
+  },
+  "JP": {
+    "minLat": 24.25,
+    "maxLat": 45.52,
+    "minLon": 122.93,
+    "maxLon": 153.99
+  },
+  "JO": {
+    "minLat": 29.19,
+    "maxLat": 33.38,
+    "minLon": 34.95,
+    "maxLon": 39.3
+  },
+  "KZ": {
+    "minLat": 40.57,
+    "maxLat": 55.44,
+    "minLon": 46.49,
+    "maxLon": 87.31
+  },
+  "KE": {
+    "minLat": -4.68,
+    "maxLat": 5.02,
+    "minLon": 33.91,
+    "maxLon": 41.9
+  },
+  "KI": {
+    "minLat": -11.44,
+    "maxLat": 4.72,
+    "minLon": -174.54,
+    "maxLon": 176.85
+  },
+  "KP": {
+    "minLat": 37.67,
+    "maxLat": 43.01,
+    "minLon": 124.32,
+    "maxLon": 130.67
+  },
+  "KR": {
+    "minLat": 33.19,
+    "maxLat": 38.61,
+    "minLon": 125.89,
+    "maxLon": 129.58
+  },
+  "KW": {
+    "minLat": 28.52,
+    "maxLat": 30.1,
+    "minLon": 46.55,
+    "maxLon": 48.43
+  },
+  "KG": {
+    "minLat": 39.17,
+    "maxLat": 43.27,
+    "minLon": 69.26,
+    "maxLon": 80.23
+  },
+  "LA": {
+    "minLat": 13.91,
+    "maxLat": 22.5,
+    "minLon": 100.09,
+    "maxLon": 107.7
+  },
+  "LV": {
+    "minLat": 55.67,
+    "maxLat": 58.08,
+    "minLon": 20.97,
+    "maxLon": 28.24
+  },
+  "LB": {
+    "minLat": 33.05,
+    "maxLat": 34.69,
+    "minLon": 35.1,
+    "maxLon": 36.62
+  },
+  "LS": {
+    "minLat": -30.67,
+    "maxLat": -28.57,
+    "minLon": 27.01,
+    "maxLon": 29.46
+  },
+  "LR": {
+    "minLat": 4.35,
+    "maxLat": 8.55,
+    "minLon": -11.49,
+    "maxLon": -7.37
+  },
+  "LY": {
+    "minLat": 19.5,
+    "maxLat": 33.17,
+    "minLon": 9.39,
+    "maxLon": 25.15
+  },
+  "LI": {
+    "minLat": 47.05,
+    "maxLat": 47.27,
+    "minLon": 9.47,
+    "maxLon": 9.64
+  },
+  "LT": {
+    "minLat": 53.9,
+    "maxLat": 56.45,
+    "minLon": 20.93,
+    "maxLon": 26.84
+  },
+  "LU": {
+    "minLat": 49.45,
+    "maxLat": 50.18,
+    "minLon": 5.73,
+    "maxLon": 6.53
+  },
+  "MG": {
+    "minLat": -25.61,
+    "maxLat": -11.95,
+    "minLon": 43.23,
+    "maxLon": 50.48
+  },
+  "MW": {
+    "minLat": -17.13,
+    "maxLat": -9.37,
+    "minLon": 32.68,
+    "maxLon": 35.92
+  },
+  "MY": {
+    "minLat": 0.86,
+    "maxLat": 7.36,
+    "minLon": 99.64,
+    "maxLon": 119.27
+  },
+  "MV": {
+    "minLat": -0.69,
+    "maxLat": 7.1,
+    "minLon": 72.68,
+    "maxLon": 73.64
+  },
+  "ML": {
+    "minLat": 10.16,
+    "maxLat": 25.0,
+    "minLon": -12.24,
+    "maxLon": 4.27
+  },
+  "MT": {
+    "minLat": 35.81,
+    "maxLat": 36.08,
+    "minLon": 14.18,
+    "maxLon": 14.58
+  },
+  "MR": {
+    "minLat": 14.72,
+    "maxLat": 27.3,
+    "minLon": -17.07,
+    "maxLon": -4.83
+  },
+  "MU": {
+    "minLat": -20.53,
+    "maxLat": -19.97,
+    "minLon": 56.59,
+    "maxLon": 63.5
+  },
+  "MX": {
+    "minLat": 14.53,
+    "maxLat": 32.72,
+    "minLon": -118.4,
+    "maxLon": -86.7
+  },
+  "MD": {
+    "minLat": 46.32,
+    "maxLat": 48.47,
+    "minLon": 26.62,
+    "maxLon": 30.13
+  },
+  "MC": {
+    "minLat": 43.72,
+    "maxLat": 43.75,
+    "minLon": 7.39,
+    "maxLon": 7.44
+  },
+  "MN": {
+    "minLat": 41.59,
+    "maxLat": 52.15,
+    "minLon": 87.75,
+    "maxLon": 119.93
+  },
+  "ME": {
+    "minLat": 41.85,
+    "maxLat": 43.56,
+    "minLon": 18.46,
+    "maxLon": 20.36
+  },
+  "MA": {
+    "minLat": 27.67,
+    "maxLat": 35.92,
+    "minLon": -13.17,
+    "maxLon": -1.01
+  },
+  "MZ": {
+    "minLat": -26.87,
+    "maxLat": -10.47,
+    "minLon": 30.22,
+    "maxLon": 40.84
+  },
+  "MM": {
+    "minLat": 9.6,
+    "maxLat": 28.54,
+    "minLon": 92.19,
+    "maxLon": 101.17
+  },
+  "NA": {
+    "minLat": -28.97,
+    "maxLat": -16.96,
+    "minLon": 11.73,
+    "maxLon": 25.26
+  },
+  "NP": {
+    "minLat": 26.35,
+    "maxLat": 30.45,
+    "minLon": 80.06,
+    "maxLon": 88.2
+  },
+  "NL": {
+    "minLat": 50.75,
+    "maxLat": 53.47,
+    "minLon": 3.36,
+    "maxLon": 7.21
+  },
+  "NZ": {
+    "minLat": -47.29,
+    "maxLat": -34.39,
+    "minLon": 166.51,
+    "maxLon": 178.52
+  },
+  "NI": {
+    "minLat": 10.71,
+    "maxLat": 15.03,
+    "minLon": -87.69,
+    "maxLon": -82.72
+  },
+  "NE": {
+    "minLat": 11.69,
+    "maxLat": 23.53,
+    "minLon": 0.17,
+    "maxLon": 15.99
+  },
+  "NG": {
+    "minLat": 4.28,
+    "maxLat": 13.89,
+    "minLon": 2.69,
+    "maxLon": 14.68
+  },
+  "MK": {
+    "minLat": 40.85,
+    "maxLat": 42.37,
+    "minLon": 20.45,
+    "maxLon": 23.04
+  },
+  "NO": {
+    "minLat": 57.96,
+    "maxLat": 71.19,
+    "minLon": 4.63,
+    "maxLon": 31.08
+  },
+  "OM": {
+    "minLat": 16.65,
+    "maxLat": 26.39,
+    "minLon": 52.0,
+    "maxLon": 59.84
+  },
+  "PK": {
+    "minLat": 23.69,
+    "maxLat": 37.08,
+    "minLon": 60.87,
+    "maxLon": 77.84
+  },
+  "PA": {
+    "minLat": 7.2,
+    "maxLat": 9.65,
+    "minLon": -82.97,
+    "maxLon": -77.16
+  },
+  "PG": {
+    "minLat": -10.65,
+    "maxLat": -1.35,
+    "minLon": 140.84,
+    "maxLon": 155.96
+  },
+  "PY": {
+    "minLat": -27.59,
+    "maxLat": -19.29,
+    "minLon": -62.64,
+    "maxLon": -54.26
+  },
+  "PE": {
+    "minLat": -18.35,
+    "maxLat": -0.04,
+    "minLon": -81.33,
+    "maxLon": -68.68
+  },
+  "PH": {
+    "minLat": 4.59,
+    "maxLat": 21.12,
+    "minLon": 116.93,
+    "maxLon": 126.6
+  },
+  "PL": {
+    "minLat": 49.0,
+    "maxLat": 54.84,
+    "minLon": 14.12,
+    "maxLon": 24.15
+  },
+  "PT": {
+    "minLat": 36.96,
+    "maxLat": 42.15,
+    "minLon": -9.5,
+    "maxLon": -6.19
+  },
+  "QA": {
+    "minLat": 24.47,
+    "maxLat": 26.15,
+    "minLon": 50.75,
+    "maxLon": 51.64
+  },
+  "RO": {
+    "minLat": 43.62,
+    "maxLat": 48.27,
+    "minLon": 20.26,
+    "maxLon": 29.69
+  },
+  "RU": {
+    "minLat": 41.19,
+    "maxLat": 81.86,
+    "minLon": 19.64,
+    "maxLon": -169.05
+  },
+  "RW": {
+    "minLat": -2.84,
+    "maxLat": -1.05,
+    "minLon": 28.86,
+    "maxLon": 30.9
+  },
+  "SA": {
+    "minLat": 16.38,
+    "maxLat": 32.16,
+    "minLon": 34.57,
+    "maxLon": 55.67
+  },
+  "SN": {
+    "minLat": 12.31,
+    "maxLat": 16.69,
+    "minLon": -17.54,
+    "maxLon": -11.36
+  },
+  "RS": {
+    "minLat": 42.23,
+    "maxLat": 46.19,
+    "minLon": 18.84,
+    "maxLon": 23.01
+  },
+  "SL": {
+    "minLat": 6.93,
+    "maxLat": 10.0,
+    "minLon": -13.3,
+    "maxLon": -10.27
+  },
+  "SG": {
+    "minLat": 1.26,
+    "maxLat": 1.47,
+    "minLon": 103.64,
+    "maxLon": 104.01
+  },
+  "SK": {
+    "minLat": 47.73,
+    "maxLat": 49.6,
+    "minLon": 16.83,
+    "maxLon": 22.56
+  },
+  "SI": {
+    "minLat": 45.42,
+    "maxLat": 46.88,
+    "minLon": 13.38,
+    "maxLon": 16.6
+  },
+  "SO": {
+    "minLat": -1.66,
+    "maxLat": 11.99,
+    "minLon": 40.99,
+    "maxLon": 51.41
+  },
+  "ZA": {
+    "minLat": -34.84,
+    "maxLat": -22.13,
+    "minLon": 16.46,
+    "maxLon": 32.89
+  },
+  "SS": {
+    "minLat": 3.49,
+    "maxLat": 12.24,
+    "minLon": 23.44,
+    "maxLon": 35.95
+  },
+  "ES": {
+    "minLat": 36.0,
+    "maxLat": 43.79,
+    "minLon": -9.3,
+    "maxLon": 4.33
+  },
+  "LK": {
+    "minLat": 5.92,
+    "maxLat": 9.84,
+    "minLon": 79.65,
+    "maxLon": 81.88
+  },
+  "SD": {
+    "minLat": 8.68,
+    "maxLat": 22.23,
+    "minLon": 21.81,
+    "maxLon": 38.61
+  },
+  "SR": {
+    "minLat": 1.83,
+    "maxLat": 6.0,
+    "minLon": -58.07,
+    "maxLon": -53.98
+  },
+  "SE": {
+    "minLat": 55.34,
+    "maxLat": 69.06,
+    "minLon": 11.11,
+    "maxLon": 24.17
+  },
+  "CH": {
+    "minLat": 45.83,
+    "maxLat": 47.81,
+    "minLon": 5.96,
+    "maxLon": 10.49
+  },
+  "SY": {
+    "minLat": 32.31,
+    "maxLat": 37.32,
+    "minLon": 35.73,
+    "maxLon": 42.38
+  },
+  "TW": {
+    "minLat": 21.9,
+    "maxLat": 25.3,
+    "minLon": 120.11,
+    "maxLon": 122.0
+  },
+  "TJ": {
+    "minLat": 36.67,
+    "maxLat": 41.05,
+    "minLon": 67.34,
+    "maxLon": 75.14
+  },
+  "TZ": {
+    "minLat": -11.75,
+    "maxLat": -0.99,
+    "minLon": 29.33,
+    "maxLon": 40.44
+  },
+  "TH": {
+    "minLat": 5.61,
+    "maxLat": 20.46,
+    "minLon": 97.34,
+    "maxLon": 105.64
+  },
+  "TL": {
+    "minLat": -9.46,
+    "maxLat": -8.13,
+    "minLon": 124.04,
+    "maxLon": 127.31
+  },
+  "TG": {
+    "minLat": 6.11,
+    "maxLat": 11.14,
+    "minLon": -0.15,
+    "maxLon": 1.81
+  },
+  "TT": {
+    "minLat": 10.04,
+    "maxLat": 11.36,
+    "minLon": -61.93,
+    "maxLon": -60.52
+  },
+  "TN": {
+    "minLat": 30.23,
+    "maxLat": 37.34,
+    "minLon": 7.52,
+    "maxLon": 11.6
+  },
+  "TR": {
+    "minLat": 35.82,
+    "maxLat": 42.1,
+    "minLon": 25.66,
+    "maxLon": 44.82
+  },
+  "TM": {
+    "minLat": 35.14,
+    "maxLat": 42.8,
+    "minLon": 52.5,
+    "maxLon": 66.68
+  },
+  "UG": {
+    "minLat": -1.48,
+    "maxLat": 4.23,
+    "minLon": 29.57,
+    "maxLon": 35.03
+  },
+  "UA": {
+    "minLat": 44.39,
+    "maxLat": 52.38,
+    "minLon": 22.14,
+    "maxLon": 40.23
+  },
+  "AE": {
+    "minLat": 22.63,
+    "maxLat": 26.08,
+    "minLon": 51.5,
+    "maxLon": 56.38
+  },
+  "GB": {
+    "minLat": 49.96,
+    "maxLat": 58.64,
+    "minLon": -8.17,
+    "maxLon": 1.75
+  },
+  "US": {
+    "minLat": 24.52,
+    "maxLat": 71.39,
+    "minLon": -179.15,
+    "maxLon": 179.77
+  },
+  "UY": {
+    "minLat": -34.95,
+    "maxLat": -30.09,
+    "minLon": -58.44,
+    "maxLon": -53.07
+  },
+  "UZ": {
+    "minLat": 37.18,
+    "maxLat": 45.59,
+    "minLon": 55.99,
+    "maxLon": 73.13
+  },
+  "VU": {
+    "minLat": -20.25,
+    "maxLat": -13.07,
+    "minLon": 166.54,
+    "maxLon": 170.24
+  },
+  "VE": {
+    "minLat": 0.65,
+    "maxLat": 12.2,
+    "minLon": -73.38,
+    "maxLon": -59.8
+  },
+  "VN": {
+    "minLat": 8.56,
+    "maxLat": 23.39,
+    "minLon": 102.14,
+    "maxLon": 109.47
+  },
+  "YE": {
+    "minLat": 12.11,
+    "maxLat": 19.0,
+    "minLon": 42.53,
+    "maxLon": 54.53
+  },
+  "ZM": {
+    "minLat": -18.08,
+    "maxLat": -8.22,
+    "minLon": 21.99,
+    "maxLon": 33.71
+  },
+  "ZW": {
+    "minLat": -22.42,
+    "maxLat": -15.61,
+    "minLon": 25.24,
+    "maxLon": 33.07
+  },
+  "HK": {
+    "minLat": 22.15,
+    "maxLat": 22.56,
+    "minLon": 113.84,
+    "maxLon": 114.41
+  },
+  "MO": {
+    "minLat": 22.11,
+    "maxLat": 22.22,
+    "minLon": 113.53,
+    "maxLon": 113.59
+  },
+  "PS": {
+    "minLat": 31.22,
+    "maxLat": 32.55,
+    "minLon": 34.22,
+    "maxLon": 35.57
+  },
+  "PR": {
+    "minLat": 17.93,
+    "maxLat": 18.52,
+    "minLon": -67.27,
+    "maxLon": -65.59
+  },
+  "XK": {
+    "minLat": 41.86,
+    "maxLat": 43.27,
+    "minLon": 20.01,
+    "maxLon": 21.79
+  }
+}

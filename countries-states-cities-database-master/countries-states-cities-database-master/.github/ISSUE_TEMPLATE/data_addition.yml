@@ -1,0 +1,75 @@
+name: Data Addition Request
+description: Request new cities, states, or countries to be added
+labels: ["data-addition"]
+body:
+  - type: dropdown
+    id: entity-type
+    attributes:
+      label: Entity Type
+      description: What type of data do you want to add?
+      options:
+        - City/Cities
+        - State/Province
+        - Country
+    validations:
+      required: true
+
+  - type: input
+    id: country
+    attributes:
+      label: Country
+      description: Which country does this data belong to?
+      placeholder: "e.g., India (IN)"
+    validations:
+      required: true
+
+  - type: input
+    id: state
+    attributes:
+      label: State/Province (if applicable)
+      description: Which state/province does this data belong to?
+      placeholder: "e.g., Maharashtra (MH)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: data
+    attributes:
+      label: Data to Add
+      description: |
+        Provide the data in JSON format. Required fields vary by entity type:
+        - Cities: name, state_id, state_code, country_id, country_code, latitude, longitude
+        - States: name, country_id, country_code
+        - Countries: name
+        Do NOT include id, created_at, updated_at, or flag fields.
+      placeholder: |
+        {
+          "name": "City Name",
+          "state_id": 1234,
+          "state_code": "XX",
+          "country_id": 101,
+          "country_code": "XX",
+          "latitude": "12.345678",
+          "longitude": "78.901234"
+        }
+      render: json
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source URL
+      description: Link to an official source for this data
+      placeholder: "https://..."
+    validations:
+      required: true
+
+  - type: input
+    id: record-count
+    attributes:
+      label: Number of Records
+      description: How many records are you requesting to add?
+      placeholder: "e.g., 5"
+    validations:
+      required: true
