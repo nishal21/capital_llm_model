@@ -66,7 +66,7 @@ def main():
     print("\n" + "=" * 60)
     print("  Done! Download model then test:")
     print('  python src/ask.py "what is the capital of kerala"')
-    print("  scp -r root@HOST:/workspace/capital_llm_model ./capital_llm_model")
+    print("  Copy capital_llm_model/ from your training machine, then test with ask.py")
     print("=" * 60)
 
 

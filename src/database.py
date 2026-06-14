@@ -8,6 +8,31 @@ try:
 except ImportError:
     fetch_state_capital = None
 
+# Common names → official country name in the dataset
+COUNTRY_ALIASES = {
+    "vatican city": "Vatican City State (Holy See)",
+    "vatican": "Vatican City State (Holy See)",
+    "holy see": "Vatican City State (Holy See)",
+    "usa": "United States",
+    "us": "United States",
+    "united states of america": "United States",
+    "america": "United States",
+    "uk": "United Kingdom",
+    "britain": "United Kingdom",
+    "great britain": "United Kingdom",
+    "uae": "United Arab Emirates",
+    "drc": "Democratic Republic of the Congo",
+    "congo kinshasa": "Democratic Republic of the Congo",
+    "congo brazzaville": "Republic of the Congo",
+    "south korea": "Korea, Republic of",
+    "north korea": "Korea, Democratic People's Republic of",
+    "czechia": "Czech Republic",
+    "burma": "Myanmar",
+    "holland": "Netherlands",
+    "ivory coast": "Côte d'Ivoire",
+    "cote d'ivoire": "Côte d'Ivoire",
+}
+
 
 class GeoDatabase:
     """In-memory index over the countries-states-cities JSON exports."""
@@ -55,6 +80,7 @@ class GeoDatabase:
         self.regions_by_name: dict[str, dict] = {}
         self.subregions_by_name: dict[str, dict] = {}
         self.states_by_country: dict[str, list[dict]] = {}
+        self._country_aliases: dict[str, dict] = {}
 
     @staticmethod
     def _key(name: str) -> str:
@@ -121,29 +147,110 @@ class GeoDatabase:
                 "city lookups disabled; countries/states/capitals still work."
             )
 
+        self._build_country_aliases()
         self._loaded = True
 
-    def get_country(self, name: str) -> dict | None:
+    def _build_country_aliases(self):
+        for alias, official in COUNTRY_ALIASES.items():
+            country = self.countries_by_name.get(self._key(official))
+            if country:
+                self._country_aliases[self._key(alias)] = country
+
+        for country in self.countries_by_name.values():
+            for field in ("iso2", "iso3", "native"):
+                value = country.get(field)
+                if value:
+                    self._country_aliases[self._key(value)] = country
+
+    def is_country_alias(self, name: str) -> bool:
+        """True when the query clearly refers to a country name, code, or alias."""
         self.load()
-        return self.countries_by_name.get(self._key(name))
+        key = self._key(name)
+        return key in self.countries_by_name or key in self._country_aliases
+
+    def find_country(self, name: str) -> dict | None:
+        """Match country by exact name, alias, ISO code, capital, or unique substring."""
+        self.load()
+        key = self._key(name)
+
+        if key in self.countries_by_name:
+            return self.countries_by_name[key]
+
+        if key in self._country_aliases:
+            return self._country_aliases[key]
+
+        capital_matches = [
+            country
+            for country in self.countries_by_name.values()
+            if country.get("capital") and self._key(country["capital"]) == key
+        ]
+        if len(capital_matches) == 1:
+            return capital_matches[0]
+
+        if len(key) >= 4:
+            substring_matches = [
+                country
+                for country in self.countries_by_name.values()
+                if key in self._key(country["name"])
+            ]
+            if len(substring_matches) == 1:
+                return substring_matches[0]
+
+        return None
+
+    def get_country(self, name: str) -> dict | None:
+        return self.find_country(name)
 
     def get_states(self, name: str) -> list[dict]:
         self.load()
-        matches = self.states_by_name.get(self._key(name), [])
+        key = self._key(name)
+        matches = self.states_by_name.get(key, [])
         if matches:
             return matches
-        return self.states_by_country.get(self._key(name), [])
+        country = self.find_country(name)
+        if country:
+            return self.states_by_country.get(self._key(country["name"]), [])
+        return self.states_by_country.get(key, [])
 
-    def get_cities(self, name: str) -> list[dict]:
+    def get_cities(self, name: str, country: str | None = None) -> list[dict]:
         self.load()
-        return self.cities_by_name.get(self._key(name), [])
+        key = self._key(name)
+        matches = self.cities_by_name.get(key, [])
+        if not matches:
+            matches = self._fuzzy_city_matches(key)
+        if country:
+            country_key = self._key(country)
+            country_record = self.find_country(country)
+            if country_record:
+                country_key = self._key(country_record["name"])
+            matches = [
+                city
+                for city in matches
+                if self._key(city["country"]) == country_key
+                or country_key in self._key(city["country"])
+            ]
+        return matches
+
+    def _fuzzy_city_matches(self, key: str) -> list[dict]:
+        import difflib
+
+        if len(key) < 5:
+            return []
+        close = difflib.get_close_matches(
+            key, self.cities_by_name.keys(), n=1, cutoff=0.88
+        )
+        if close:
+            return self.cities_by_name[close[0]]
+        return []
 
     def resolve(self, name: str) -> tuple[str, dict | list[dict]] | None:
         """Return entity type and record(s) for a place name."""
         self.load()
         key = self._key(name)
-        if key in self.countries_by_name:
-            return ("country", self.countries_by_name[key])
+
+        country = self.find_country(name)
+        if country:
+            return ("country", country)
 
         state_matches = self.states_by_name.get(key, [])
         if state_matches:

@@ -13,6 +13,7 @@ def main():
     print("  what is the capital of kerala")
     print("  what is the capital of england")
     print("  what country is Paris in")
+    print("  where is Malappuram in")
     print("  currency of Japan | list states in India | exit")
     print("Flags: --llm (LLM only) | --db (database only)")
     print()

@@ -37,6 +37,8 @@ def _is_failure(text: str) -> bool:
         or "not found" in lower
         or "no capital is stored" in lower
         or "not stored in the dataset" in lower
+        or "was not found in the dataset" in lower
+        or "was not found in the city index" in lower
     )
 
 

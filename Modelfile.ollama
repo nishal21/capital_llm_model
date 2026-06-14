@@ -1,0 +1,17 @@
+# Ollama Modelfile — use after converting to GGUF (see OLLAMA.md)
+# Create:  ollama create nishal21/geo-capital-llm -f Modelfile.ollama
+# Push:    ollama push nishal21/geo-capital-llm
+# Run:     ollama run nishal21/geo-capital-llm
+
+FROM ./capital_llm_model.gguf
+
+PARAMETER temperature 0
+PARAMETER top_p 1
+PARAMETER num_predict 40
+PARAMETER stop "Question:"
+
+TEMPLATE """{{ .Prompt }}"""
+
+SYSTEM """You answer geography questions. Use this format:
+Question: <question>? Answer: <short factual answer>
+Keep answers brief and factual."""

@@ -5,6 +5,7 @@ from pathlib import Path
 from config import PROJECT_ROOT
 
 CACHE_PATH = PROJECT_ROOT / ".cache" / "state_capitals.json"
+LANGUAGES_CACHE_PATH = PROJECT_ROOT / ".cache" / "country_languages.json"
 USER_AGENT = "country-llm-app/1.0 (geo Q&A; educational project)"
 
 
@@ -84,3 +85,47 @@ def prefetch_all_state_capitals(states: list[dict], show_progress: bool = True) 
         cached = sum(1 for value in _load_cache().values() if value)
         print(f"  State capitals in cache: {cached}")
     return _load_cache()
+
+
+def _load_languages_cache() -> dict[str, list[str]]:
+    if not LANGUAGES_CACHE_PATH.exists():
+        return {}
+    with open(LANGUAGES_CACHE_PATH, "r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _save_languages_cache(cache: dict[str, list[str]]):
+    LANGUAGES_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(LANGUAGES_CACHE_PATH, "w", encoding="utf-8") as handle:
+        json.dump(cache, handle, ensure_ascii=False, indent=2)
+
+
+def fetch_country_languages(wiki_data_id: str | None, force: bool = False) -> list[str]:
+    """Official languages via Wikidata P37."""
+    if not wiki_data_id:
+        return []
+
+    cache = _load_languages_cache()
+    if not force and wiki_data_id in cache:
+        return cache[wiki_data_id]
+
+    languages: list[str] = []
+    try:
+        payload = _fetch_json(
+            f"https://www.wikidata.org/wiki/Special:EntityData/{wiki_data_id}.json"
+        )
+        claims = payload["entities"][wiki_data_id].get("claims", {}).get("P37", [])
+        for claim in claims:
+            try:
+                lang_id = claim["mainsnak"]["datavalue"]["value"]["id"]
+                label = _entity_label(lang_id)
+                if label and label not in languages:
+                    languages.append(label)
+            except (KeyError, TypeError):
+                continue
+    except Exception:
+        languages = []
+
+    cache[wiki_data_id] = languages
+    _save_languages_cache(cache)
+    return languages

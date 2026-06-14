@@ -1,26 +1,12 @@
-# Geo Capital LLM — Ollama Modelfile
-# After uploading to Hugging Face:
-#   ollama create geo-capital -f Modelfile
-#
-# Or with local model folder (if your Ollama version supports it):
-#   ollama create geo-capital -f Modelfile
+# Geo Capital LLM — local dev Modelfile (safetensors)
+# For ollama.com publishing, use Modelfile.ollama + OLLAMA.md instead.
 
 FROM ./capital_llm_model
 
-PARAMETER temperature 0.1
-PARAMETER top_p 0.9
+PARAMETER temperature 0
+PARAMETER top_p 1
 PARAMETER num_predict 40
-PARAMETER stop "Question:"
 
 TEMPLATE """{{ .Prompt }}"""
 
-SYSTEM """You answer geography questions about countries, states, and cities.
-Always respond in the format: The capital of X is Y.
-Use facts from your training only."""
-
-MESSAGE user """
-Question: {{ .Prompt }} Answer:
-"""
-
-MESSAGE assistant """
-"""
+SYSTEM """You answer geography questions. Format: Question: ... Answer: <answer>"""
