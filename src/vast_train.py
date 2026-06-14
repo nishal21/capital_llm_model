@@ -10,7 +10,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from config import DEFAULT_MODEL, PROJECT_ROOT
+
+MODELS_DIR = PROJECT_ROOT / "models"
+LOCAL_GPT2 = MODELS_DIR / "gpt2"
 
 
 def run(cmd: list[str]):
@@ -20,25 +23,35 @@ def run(cmd: list[str]):
         sys.exit(result.returncode)
 
 
+def resolve_base_model() -> str:
+    if LOCAL_GPT2.joinpath("config.json").exists():
+        return str(LOCAL_GPT2)
+    return DEFAULT_MODEL
+
+
 def main():
     full = "--full" in sys.argv
-    extra = [a for a in sys.argv[1:] if a != "--full"]
+    skip_data = "--skip-data" in sys.argv
+    extra = [a for a in sys.argv[1:] if a not in {"--full", "--skip-data"}]
 
     print("=" * 60)
     print("  Vast.ai GPU training — GPT-2 + fp16 + batch 32")
     print("=" * 60)
 
-    if full:
-        run([sys.executable, "src/build_training_data.py", "--full"])
-    else:
-        run([sys.executable, "src/build_training_data.py"])
+    run([sys.executable, "src/download_base_model.py", "--model", "gpt2"])
+
+    if not skip_data:
+        if full:
+            run([sys.executable, "src/build_training_data.py", "--full"])
+        else:
+            run([sys.executable, "src/build_training_data.py"])
 
     cmd = [
         sys.executable,
         "src/train.py",
         "--no-wandb",
         "--model",
-        "gpt2",
+        resolve_base_model(),
         "--batch-size",
         "32",
         "--epochs",
