@@ -1,10 +1,8 @@
 """
-Train on ALL dataset examples (countries, states, cities, capitals) — 1 epoch only.
+Train on ALL dataset examples — 1 epoch.
 
-  python src/full_train.py
-
-~280k examples, 1 epoch, batch 8 → ~30-40 hours on CPU (vs 9 days for 3 epochs).
-Stop any running training first (Ctrl+C).
+  python src/full_train.py          # CPU ~30-40 hrs
+  python src/vast_train.py --full   # GPU ~10 min on RTX 5090
 """
 
 import subprocess
@@ -23,9 +21,8 @@ def run(cmd: list[str]):
 
 def main():
     print("=" * 60)
-    print("  Geo LLM — FULL dataset, 1 epoch")
-    print("  ~287k examples | ~36k steps | ~30-40 hrs on CPU")
-    print("  (3x faster than your previous 3-epoch run)")
+    print("  Geo LLM — FULL dataset, GPT-2, 1 epoch")
+    print("  On GPU use: python src/vast_train.py --full")
     print("=" * 60)
 
     run([sys.executable, "src/build_training_data.py", "--full"])
@@ -36,16 +33,12 @@ def main():
         "--no-wandb",
         "--epochs",
         "1",
-        "--batch-size",
-        "8",
         "--model",
-        "distilgpt2",
+        "gpt2",
     ])
 
     print("\n" + "=" * 60)
-    print("  Done! Test with:")
-    print('  python src/ask.py "what is the capital of kerala"')
-    print('  python src/ask.py "what country is Paris in"')
+    print('  Done! Test: python src/ask.py "what country is Paris in"')
     print("=" * 60)
 
 

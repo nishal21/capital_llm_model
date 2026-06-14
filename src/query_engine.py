@@ -122,11 +122,10 @@ class QueryEngine:
         place = normalize_question(place)
         capital, note = self.db.place_capital(place)
         if capital:
-            return f"The capital of {place} is {capital}. ({note})"
+            return f"The capital of {place} is {capital}."
         return (
-            f"I found '{place}' but no capital is stored in the dataset. ({note}) "
-            "State capitals may require Wikidata lookup — try 'tell me about {place}' for other facts."
-        ).replace("{place}", place)
+            f"I could not find a capital for '{place}' in the dataset. ({note})"
+        )
 
     def _answer_field(self, field_label: str, place: str) -> str:
         field = self.FIELD_MAP.get(field_label.lower(), field_label.lower())

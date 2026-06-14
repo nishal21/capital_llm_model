@@ -1,12 +1,7 @@
 """
-One-command fast training (~1-3 hours on CPU, not 9 days).
+Fast capitals-only training on CPU or GPU.
 
   python src/quick_train.py
-
-Does:
-  1. Build capitals-only training data (~10k examples)
-  2. Train DistilGPT-2 for 1 epoch
-  3. Save to capital_llm_model/
 """
 
 import subprocess
@@ -25,8 +20,7 @@ def run(cmd: list[str]):
 
 def main():
     print("=" * 60)
-    print("  Geo Capital LLM — fast training (capitals only, 1 epoch)")
-    print("  Expected time: ~1-3 hours on CPU")
+    print("  Geo Capital LLM — capitals only, GPT-2, 1 epoch")
     print("=" * 60)
 
     run([sys.executable, "src/build_training_data.py"])
@@ -35,16 +29,13 @@ def main():
         "src/train.py",
         "--no-wandb",
         "--model",
-        "distilgpt2",
+        "gpt2",
         "--epochs",
         "1",
-        "--batch-size",
-        "8",
     ])
 
     print("\n" + "=" * 60)
-    print("  Done! Test with:")
-    print('  python src/ask.py "what is the capital of kerala"')
+    print('  Done! Test: python src/ask.py "what is the capital of kerala"')
     print("=" * 60)
 
 

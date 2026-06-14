@@ -86,33 +86,40 @@ class GeoDatabase:
             country_key = self._key(state["country_name"])
             self.states_by_country.setdefault(country_key, []).append(state)
 
-        nested = self._load_json("countries+states+cities.json")
-        for country in nested:
-            country_name = country["name"]
-            country_key = self._key(country_name)
-            if country_key in self.countries_by_name:
-                self.countries_by_name[country_key]["states_detail"] = country.get(
-                    "states", []
-                )
-
-            for state in country.get("states", []):
-                state_id = state.get("id")
-                if state_id in states_by_id:
-                    states_by_id[state_id]["cities"] = state.get("cities", [])
-
-                state_name = state["name"]
-                for city in state.get("cities", []):
-                    city_record = {
-                        "name": city["name"],
-                        "country": country_name,
-                        "state": state_name,
-                        "latitude": city.get("latitude"),
-                        "longitude": city.get("longitude"),
-                        "timezone": city.get("timezone"),
-                    }
-                    self.cities_by_name.setdefault(self._key(city["name"]), []).append(
-                        city_record
+        nested_path = self.db_root / "countries+states+cities.json"
+        if nested_path.exists():
+            nested = self._load_json("countries+states+cities.json")
+            for country in nested:
+                country_name = country["name"]
+                country_key = self._key(country_name)
+                if country_key in self.countries_by_name:
+                    self.countries_by_name[country_key]["states_detail"] = country.get(
+                        "states", []
                     )
+
+                for state in country.get("states", []):
+                    state_id = state.get("id")
+                    if state_id in states_by_id:
+                        states_by_id[state_id]["cities"] = state.get("cities", [])
+
+                    state_name = state["name"]
+                    for city in state.get("cities", []):
+                        city_record = {
+                            "name": city["name"],
+                            "country": country_name,
+                            "state": state_name,
+                            "latitude": city.get("latitude"),
+                            "longitude": city.get("longitude"),
+                            "timezone": city.get("timezone"),
+                        }
+                        self.cities_by_name.setdefault(
+                            self._key(city["name"]), []
+                        ).append(city_record)
+        else:
+            print(
+                "Note: countries+states+cities.json not found — "
+                "city lookups disabled; countries/states/capitals still work."
+            )
 
         self._loaded = True
 

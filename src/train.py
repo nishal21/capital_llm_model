@@ -3,12 +3,19 @@ import os
 import sys
 from pathlib import Path
 
-from config import PROJECT_ROOT
+import torch
 
-TRAINING_PATH = PROJECT_ROOT / "data" / "training.jsonl"
-MODEL_DIR = PROJECT_ROOT / "capital_llm_model"
+from config import DEFAULT_MODEL, MODEL_DIR, PROJECT_ROOT, TRAINING_PATH
 
 os.environ.setdefault("WANDB_PROJECT", "capital_llm")
+
+
+def gpu_available() -> bool:
+    return torch.cuda.is_available()
+
+
+def default_batch_size() -> int:
+    return 32 if gpu_available() else 8
 
 
 def load_training_texts(force_rebuild: bool = False, mode: str = "capitals") -> list[str]:
@@ -32,7 +39,7 @@ def load_training_texts(force_rebuild: bool = False, mode: str = "capitals") -> 
     return texts
 
 
-def write_model_card(model_name: str, num_examples: int):
+def write_model_card(model_name: str, base_model: str, num_examples: int):
     readme = f"""---
 license: mit
 tags:
@@ -40,6 +47,7 @@ tags:
 - capitals
 - gpt2
 - question-answering
+base_model: {base_model}
 datasets:
 - dr5hn/countries-states-cities-database
 language:
@@ -48,7 +56,7 @@ language:
 
 # {model_name}
 
-Fine-tuned GPT-2 for geography Q&A (capitals, currency, country/state/city facts).
+Fine-tuned {base_model} for geography Q&A (capitals, currency, country/state/city facts).
 
 ## Training data
 
@@ -86,24 +94,36 @@ def main():
     from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="distilgpt2", help="Base model (distilgpt2 or gpt2)")
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help="Base model: gpt2 (default), gpt2-medium, distilgpt2",
+    )
     parser.add_argument("--epochs", type=int, default=1)
-    parser.add_argument("--batch-size", type=int, default=8)
-    parser.add_argument("--lr", type=float, default=3e-5)
+    parser.add_argument("--batch-size", type=int, default=default_batch_size())
+    parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--max-length", type=int, default=128)
     parser.add_argument("--no-wandb", action="store_true")
-    parser.add_argument("--full-data", action="store_true", help="Use/rebuild full 280k dataset (slow)")
-    parser.add_argument("--rebuild-data", action="store_true", help="Rebuild training.jsonl before training")
+    parser.add_argument("--full-data", action="store_true", help="Use/rebuild full 280k dataset")
+    parser.add_argument("--rebuild-data", action="store_true", help="Rebuild training.jsonl")
+    parser.add_argument("--fp16", action="store_true", help="Force fp16 (auto on GPU)")
+    parser.add_argument("--no-fp16", action="store_true", help="Disable fp16 even on GPU")
     args = parser.parse_args()
+
+    use_fp16 = args.fp16 or (gpu_available() and not args.no_fp16)
+    device = "GPU" if gpu_available() else "CPU"
+    if gpu_available():
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
 
     mode = "full" if args.full_data else "capitals"
     texts = load_training_texts(force_rebuild=args.rebuild_data, mode=mode)
+    print(f"Base model: {args.model}")
     print(f"Training examples: {len(texts)}")
     steps_per_epoch = (len(texts) + args.batch_size - 1) // args.batch_size
     total_steps = steps_per_epoch * args.epochs
-    hours_est = total_steps * 3.7 / 3600
-    print(f"Steps: ~{total_steps} ({args.epochs} epoch(s), batch {args.batch_size})")
-    print(f"Estimated time on CPU: ~{hours_est:.0f} hours")
+    sec_per_step = 0.15 if use_fp16 else (0.4 if gpu_available() else 3.7)
+    print(f"Steps: ~{total_steps} ({args.epochs} epoch(s), batch {args.batch_size}, {device}, fp16={use_fp16})")
+    print(f"Estimated time: ~{total_steps * sec_per_step / 60:.1f} min")
 
     dataset = Dataset.from_dict({"text": texts})
     tokenizer = AutoTokenizer.from_pretrained(args.model)
@@ -128,8 +148,8 @@ def main():
 
         wandb.init(
             project="capital_llm",
-            notes="Geo Q&A model for HF / Ollama publish",
-            tags=["geo-llm", "capitals"],
+            notes=f"Geo Q&A fine-tune on {args.model}",
+            tags=["geo-llm", "capitals", args.model],
         )
 
     training_args = TrainingArguments(
@@ -142,8 +162,9 @@ def main():
         save_strategy="epoch",
         save_total_limit=2,
         report_to=report_to,
-        dataloader_pin_memory=False,
-        fp16=False,
+        dataloader_pin_memory=gpu_available(),
+        fp16=use_fp16,
+        gradient_accumulation_steps=1,
     )
 
     trainer = Trainer(model=model, args=training_args, train_dataset=tokenized)
@@ -153,15 +174,10 @@ def main():
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(MODEL_DIR)
     tokenizer.save_pretrained(MODEL_DIR)
-    write_model_card("geo-capital-llm", len(texts))
-
-    if not args.no_wandb:
-        import wandb
-
-        wandb.finish()
+    write_model_card("geo-capital-llm", args.model, len(texts))
 
     print(f"\nModel saved to {MODEL_DIR}")
-    print("Test:  python src/ask.py \"what is the capital of kerala\"")
+    print('Test:  python src/ask.py "what is the capital of kerala"')
     print("Export: python src/export_hf.py --repo-id YOUR_USERNAME/geo-capital-llm")
 
 
